@@ -28,7 +28,7 @@ public class Join {
 		INNER, LEFT_OUTER, FULL_OUTER
 	}
 
-	static class LeftSide<L> {
+	public static class LeftSide<L> {
 		private final Stream<L> left;
 		private final JoinType joinType;
 
@@ -42,7 +42,7 @@ public class Join {
 		}
 	}
 
-	static class LeftKey<L, K> {
+	public static class LeftKey<L, K> {
 
 		private final LeftSide<L> leftSide;
 		private final Function<L, K> leftKeyFunction;
@@ -57,7 +57,7 @@ public class Join {
 		}
 	}
 
-	static class RightSide<L, R, K> {
+	public static class RightSide<L, R, K> {
 		private final Stream<R> right;
 		private final LeftKey<L, K> leftKey;
 
@@ -71,7 +71,7 @@ public class Join {
 		}
 	}
 
-	static class RightKey<L, R, K> {
+	public static class RightKey<L, R, K> {
 		private final Function<R, K> rightKeyFunction;
 		private final RightSide<L, R, K> rightSide;
 
