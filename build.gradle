@@ -2,6 +2,7 @@ group 'de.infonautika.streamjoin'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: 'maven'
 
 repositories {
     jcenter()
