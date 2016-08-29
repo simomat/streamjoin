@@ -6,6 +6,7 @@ Simple show room here: [JoinTest.java](https://github.com/simomat/streamjoin/blo
 
 Ideas for next steps:
 - [ ] add non-equi join (like 'WHERE A.RANK < B.RANK')
+- [ ] for outer joins: let user define default values or factories instead passing 'null' to consumer
 - [ ] make generic types less restrictive (use <? extends L> and so on)
 - [ ] submit to JCenter
 - [ ] get more ideas
