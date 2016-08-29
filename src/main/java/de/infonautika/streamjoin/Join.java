@@ -16,26 +16,26 @@ public class Join {
 		return new LeftSide<>(left, JoinType.INNER);
 	}
 
-    public static <L> LeftSide<L> leftOuter(Stream<L> left) {
-        return new LeftSide<>(left, JoinType.LEFT_OUTER);
-    }
+	public static <L> LeftSide<L> leftOuter(Stream<L> left) {
+		return new LeftSide<>(left, JoinType.LEFT_OUTER);
+	}
 
-    public static <L> LeftSide<L> fullOuter(Stream<L> left) {
-        return new LeftSide<>(left, JoinType.FULL_OUTER);
-    }
+	public static <L> LeftSide<L> fullOuter(Stream<L> left) {
+		return new LeftSide<>(left, JoinType.FULL_OUTER);
+	}
 
-    private enum JoinType {
-        INNER, LEFT_OUTER, FULL_OUTER
-    }
+	private enum JoinType {
+		INNER, LEFT_OUTER, FULL_OUTER
+	}
 
-    static class LeftSide<L> {
+	static class LeftSide<L> {
 		private final Stream<L> left;
-        private final JoinType joinType;
+		private final JoinType joinType;
 
-        public LeftSide(Stream<L> left, JoinType joinType) {
+		public LeftSide(Stream<L> left, JoinType joinType) {
 			this.left = left;
-            this.joinType = joinType;
-        }
+			this.joinType = joinType;
+		}
 
 		public <K> LeftKey<L, K> withKey(Function<L, K> leftKeyFunction) {
 			return new LeftKey<>(leftKeyFunction, this);
@@ -81,51 +81,51 @@ public class Join {
 		}
 
 		public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
-            return  new Joiner<Y>(
-                    createJoinStrategy(
+			return  new Joiner<Y>(
+					createJoinStrategy(
 							getIndexer(),
-                            (l, rs) -> rs.map(r -> combiner.apply(l, r)),
+							(l, rs) -> rs.map(r -> combiner.apply(l, r)),
 							getJoinType()))
-                    .doJoin();
+					.doJoin();
 		}
 
 
-        public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            return new Joiner<Y>(
-                    createJoinStrategy(
+		public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+			return new Joiner<Y>(
+					createJoinStrategy(
 							getIndexer(),
 							(l, rs) -> Stream.of(grouper.apply(l, rs)),
 							getJoinType()))
-                    .doJoin();
-        }
+					.doJoin();
+		}
 
 		protected Indexer<L, R, K> getIndexer() {
 			return new Indexer<>(
-                    rightSide.leftKey.leftSide.left,
-                    rightSide.leftKey.leftKeyFunction,
-                    rightSide.right,
-                    rightKeyFunction);
+					rightSide.leftKey.leftSide.left,
+					rightSide.leftKey.leftKeyFunction,
+					rightSide.right,
+					rightKeyFunction);
 		}
 
-        protected JoinType getJoinType() {
-            return rightSide.leftKey.leftSide.joinType;
-        }
+		protected JoinType getJoinType() {
+			return rightSide.leftKey.leftSide.joinType;
+		}
 
-        private <Y> JoinStrategy<Y> createJoinStrategy(Indexer<L, R, K> indexer, BiFunction<L, Stream<R>, Stream<Y>> grouper, JoinType joinType) {
-            if (joinType.equals(JoinType.INNER)) {
-                return new InnerEquiJoin<>(indexer, grouper);
-            }
+		private <Y> JoinStrategy<Y> createJoinStrategy(Indexer<L, R, K> indexer, BiFunction<L, Stream<R>, Stream<Y>> grouper, JoinType joinType) {
+			if (joinType.equals(JoinType.INNER)) {
+				return new InnerEquiJoin<>(indexer, grouper);
+			}
 
-            if (joinType.equals(JoinType.LEFT_OUTER)) {
-                return new LeftOuterJoin<>(indexer, grouper);
-            }
+			if (joinType.equals(JoinType.LEFT_OUTER)) {
+				return new LeftOuterJoin<>(indexer, grouper);
+			}
 
-            if (joinType.equals(JoinType.FULL_OUTER)) {
-                return new LeftOuterJoin<>(indexer, grouper);
-            }
+			if (joinType.equals(JoinType.FULL_OUTER)) {
+				return new LeftOuterJoin<>(indexer, grouper);
+			}
 
-            throw new UnsupportedOperationException();
-        }
+			throw new UnsupportedOperationException();
+		}
 	}
 
 }

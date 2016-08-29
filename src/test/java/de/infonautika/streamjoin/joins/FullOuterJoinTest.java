@@ -46,10 +46,10 @@ public class FullOuterJoinTest {
         List<Tuple<Employee, Department>> joined = new Joiner<>(
                 new FullOuterJoin<>(
                         new Indexer<>(
-                            Stream.of(rafael, unterberg),
-                            Employee::getDepartmentId,
-                            Stream.of(stock, finance),
-                            Department::getId),
+                                Stream.of(rafael, unterberg),
+                                Employee::getDepartmentId,
+                                Stream.of(stock, finance),
+                                Department::getId),
                         (e, ds) -> ds.map(d -> tuple(e, d))))
                 .doJoin()
                 .collect(toList());
@@ -78,10 +78,10 @@ public class FullOuterJoinTest {
         List<Tuple<Department, Employee>> joined = new Joiner<>(
                 new FullOuterJoin<>(
                         new Indexer<>(
-                            Stream.of(stock),
-                            Department::getId,
-                            Stream.of(rafael, unterberg),
-                            Employee::getDepartmentId),
+                                Stream.of(stock),
+                                Department::getId,
+                                Stream.of(rafael, unterberg),
+                                Employee::getDepartmentId),
                         (d, es) -> es.map(e -> tuple(d, e))))
                 .doJoin()
                 .collect(toList());
@@ -149,9 +149,9 @@ public class FullOuterJoinTest {
         return new Joiner<>(
                 new FullOuterJoin<>(
                         new Indexer<>(left,
-                            Employee::getDepartmentId,
-                            right,
-                            Department::getId),
+                                Employee::getDepartmentId,
+                                right,
+                                Department::getId),
                         (e, ds) -> ds.map(d -> tuple(e, d))))
                 .doJoin()
                 .collect(toList());
