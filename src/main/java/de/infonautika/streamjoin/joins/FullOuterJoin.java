@@ -4,7 +4,6 @@ import de.infonautika.streamjoin.joins.indexing.Indexer;
 
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 
@@ -13,8 +12,8 @@ public class FullOuterJoin<L, R, K, Y> extends LeftOuterJoin<L, R, K, Y> {
     private Set<K> unmatchedRight;
     private final L leftNull = null;
 
-    public FullOuterJoin(Indexer<L, R, K> indexer, BiFunction<L, Stream<R>, Stream<Y>> grouper) {
-        super(indexer, grouper);
+    public FullOuterJoin(Indexer<L, R, K> indexer) {
+        super(indexer);
     }
 
     @Override
@@ -35,14 +34,14 @@ public class FullOuterJoin<L, R, K, Y> extends LeftOuterJoin<L, R, K, Y> {
         addNullMatchRight(map.getRightNullKeyElements());
     }
 
-    private void addNullMatchRight(List<R> rightKeyNullElements) {
-        addResultPart(grouper.apply(leftNull, rightKeyNullElements.stream()));
-    }
-
     @Override
     protected void handleUnmatched() {
         super.handleUnmatched();
         unmatchedRight.forEach(key -> addNullMatchRight(map.getRight(key)));
+    }
+
+    private void addNullMatchRight(List<R> rightKeyNullElements) {
+        consumer.accept(Stream.of(leftNull), rightKeyNullElements);
     }
 
 }

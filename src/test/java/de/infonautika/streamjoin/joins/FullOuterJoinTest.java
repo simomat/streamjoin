@@ -1,5 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
+import de.infonautika.streamjoin.consumer.CombiningConsumer;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 import de.infonautika.streamjoin.joins.repo.Department;
 import de.infonautika.streamjoin.joins.repo.Employee;
@@ -49,8 +50,8 @@ public class FullOuterJoinTest {
                                 Stream.of(rafael, unterberg),
                                 Employee::getDepartmentId,
                                 Stream.of(stock, finance),
-                                Department::getId),
-                        (e, ds) -> ds.map(d -> tuple(e, d))))
+                                Department::getId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
 
@@ -81,8 +82,8 @@ public class FullOuterJoinTest {
                                 Stream.of(stock),
                                 Department::getId,
                                 Stream.of(rafael, unterberg),
-                                Employee::getDepartmentId),
-                        (d, es) -> es.map(e -> tuple(d, e))))
+                                Employee::getDepartmentId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
 
@@ -151,8 +152,8 @@ public class FullOuterJoinTest {
                         new Indexer<>(left,
                                 Employee::getDepartmentId,
                                 right,
-                                Department::getId),
-                        (e, ds) -> ds.map(d -> tuple(e, d))))
+                                Department::getId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
     }

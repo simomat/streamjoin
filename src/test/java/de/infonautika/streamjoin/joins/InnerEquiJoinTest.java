@@ -1,5 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
+import de.infonautika.streamjoin.consumer.CombiningConsumer;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 import de.infonautika.streamjoin.joins.repo.Department;
 import de.infonautika.streamjoin.joins.repo.Employee;
@@ -18,7 +19,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.empty;
 
 @SuppressWarnings("unchecked")
-public class InnerJoinTest {
+public class InnerEquiJoinTest {
 
     @Test
     public void completeScenario() throws Exception {
@@ -64,10 +65,13 @@ public class InnerJoinTest {
         Department stock = new Department(5, "Stock");
 
         List<Tuple<Department, Employee>> joined = new Joiner<>(
-                new InnerEquiJoin<>(new Indexer<>(Stream.of(stock),
-                        Department::getId,
-                        Stream.of(rafael, unterberg),
-                        Employee::getDepartmentId), (d, es) -> es.map(e -> tuple(d, e))))
+                new InnerEquiJoin<>(
+                        new Indexer<>(
+                                Stream.of(stock),
+                                Department::getId,
+                                Stream.of(rafael, unterberg),
+                                Employee::getDepartmentId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
 
@@ -140,10 +144,13 @@ public class InnerJoinTest {
 */
     private List<Tuple<Employee, Department>> innerJoin(Stream<Employee> left, Stream<Department> right) {
         return new Joiner<>(
-                new InnerEquiJoin<>(new Indexer<>(left,
-                        Employee::getDepartmentId,
-                        right,
-                        Department::getId), (e, ds) -> ds.map(d -> tuple(e, d))))
+                new InnerEquiJoin<>(
+                        new Indexer<>(
+                                left,
+                                Employee::getDepartmentId,
+                                right,
+                                Department::getId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
     }

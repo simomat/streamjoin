@@ -1,8 +1,7 @@
 package de.infonautika.streamjoin.joins;
 
-import java.util.function.Consumer;
-import java.util.stream.Stream;
+import de.infonautika.streamjoin.consumer.MatchConsumer;
 
-public interface JoinStrategy<Y> {
-    void join(Consumer<Stream<Y>> resultConsumer);
+public interface JoinStrategy<L, R, Y> {
+    void join(MatchConsumer<L, R, Y> consumer);
 }

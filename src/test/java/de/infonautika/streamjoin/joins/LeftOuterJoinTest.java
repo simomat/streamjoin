@@ -1,5 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
+import de.infonautika.streamjoin.consumer.CombiningConsumer;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 import de.infonautika.streamjoin.joins.repo.Department;
 import de.infonautika.streamjoin.joins.repo.Employee;
@@ -62,11 +63,16 @@ public class LeftOuterJoinTest {
         Employee rafael = new Employee(5, "Rafael");
         Department stock = new Department(5, "Stock");
 
-        List<Tuple<Department, Employee>> joined = new Joiner<>(
-                new LeftOuterJoin<>(new Indexer<>(Stream.of(stock),
-                        Department::getId,
-                        Stream.of(rafael, unterberg),
-                        Employee::getDepartmentId), (e, ds) -> ds.map(d -> tuple(e, d))))
+        List<Tuple<Department, Employee>> joined =
+                new Joiner<>(
+                        new LeftOuterJoin<>(
+                                new Indexer<>(
+                                        Stream.of(stock),
+                                        Department::getId,
+                                        Stream.of(rafael, unterberg),
+                                        Employee::getDepartmentId)),
+                        new CombiningConsumer<>(Tuple::new)
+                )
                 .doJoin()
                 .collect(toList());
 
@@ -129,10 +135,13 @@ public class LeftOuterJoinTest {
 
     private List<Tuple<Employee, Department>> leftOuterJoin(Stream<Employee> left, Stream<Department> right) {
         return new Joiner<>(
-                new LeftOuterJoin<>(new Indexer<>(left,
-                        Employee::getDepartmentId,
-                        right,
-                        Department::getId), (e, ds) -> ds.map(d -> tuple(e, d))))
+                new LeftOuterJoin<>(
+                        new Indexer<>(
+                                left,
+                                Employee::getDepartmentId,
+                                right,
+                                Department::getId)),
+                new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());
     }

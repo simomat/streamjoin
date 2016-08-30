@@ -1,24 +1,22 @@
 package de.infonautika.streamjoin.joins;
 
+import de.infonautika.streamjoin.consumer.MatchConsumer;
+
 import java.util.stream.Stream;
 
-import static java.util.stream.Stream.concat;
-import static java.util.stream.Stream.empty;
+public class Joiner<L, R, Y> {
+    private final JoinStrategy<L, R, Y> join;
+    private final MatchConsumer<L, R, Y> consumer;
 
-public class Joiner<Y> {
-    private final JoinStrategy<Y> join;
-    private Stream<Y> result = empty();
-
-    public Joiner(JoinStrategy<Y> join) {
-        this.join = join;
+    public Joiner(JoinStrategy<L, R, Y> joinStrategy, MatchConsumer<L, R, Y> consumer) {
+        this.join = joinStrategy;
+        this.consumer = consumer;
     }
 
     public Stream<Y> doJoin() {
-        join.join(this::addResultPart);
-        return result;
+        join.join(consumer);
+        return consumer.getResult();
     }
 
-    protected void addResultPart(Stream<Y> part) {
-        result = concat(result, part);
-    }
+
 }

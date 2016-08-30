@@ -1,9 +1,9 @@
 package de.infonautika.streamjoin;
 
-import de.infonautika.streamjoin.joins.InnerEquiJoin;
-import de.infonautika.streamjoin.joins.JoinStrategy;
-import de.infonautika.streamjoin.joins.Joiner;
-import de.infonautika.streamjoin.joins.LeftOuterJoin;
+import de.infonautika.streamjoin.consumer.CombiningConsumer;
+import de.infonautika.streamjoin.consumer.GroupingConsumer;
+import de.infonautika.streamjoin.consumer.MatchConsumer;
+import de.infonautika.streamjoin.joins.*;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 
 import java.util.function.BiFunction;
@@ -81,22 +81,21 @@ public class Join {
         }
 
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
-            return new Joiner<Y>(
-                    createJoinStrategy(
-                            getIndexer(),
-                            (l, rs) -> rs.map(r -> combiner.apply(l, r)),
-                            getJoinType()))
+            return createJoiner(new CombiningConsumer<>(combiner))
                     .doJoin();
         }
 
-
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            return new Joiner<Y>(
+            return createJoiner(new GroupingConsumer<>(grouper))
+                    .doJoin();
+        }
+
+        private <Y> Joiner<L, R, Y> createJoiner(MatchConsumer<L, R, Y> consumer) {
+            return new Joiner<>(
                     createJoinStrategy(
                             getIndexer(),
-                            (l, rs) -> Stream.of(grouper.apply(l, rs)),
-                            getJoinType()))
-                    .doJoin();
+                            getJoinType()),
+                    consumer);
         }
 
         private Indexer<L, R, K> getIndexer() {
@@ -111,17 +110,17 @@ public class Join {
             return rightSide.leftKey.leftSide.joinType;
         }
 
-        private <Y> JoinStrategy<Y> createJoinStrategy(Indexer<L, R, K> indexer, BiFunction<L, Stream<R>, Stream<Y>> grouper, JoinType joinType) {
+        private <Y> JoinStrategy<L, R, Y> createJoinStrategy(Indexer<L, R, K> indexer, JoinType joinType) {
             if (joinType.equals(JoinType.INNER)) {
-                return new InnerEquiJoin<>(indexer, grouper);
+                return new InnerEquiJoin<>(indexer);
             }
 
             if (joinType.equals(JoinType.LEFT_OUTER)) {
-                return new LeftOuterJoin<>(indexer, grouper);
+                return new LeftOuterJoin<>(indexer);
             }
 
             if (joinType.equals(JoinType.FULL_OUTER)) {
-                return new LeftOuterJoin<>(indexer, grouper);
+                return new FullOuterJoin<>(indexer);
             }
 
             throw new UnsupportedOperationException();
