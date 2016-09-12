@@ -1,7 +1,5 @@
 package de.infonautika.streamjoin.joins.indexing;
 
-import de.infonautika.streamjoin.streamutils.StreamCollector;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
