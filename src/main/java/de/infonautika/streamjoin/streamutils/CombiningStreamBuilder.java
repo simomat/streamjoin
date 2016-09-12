@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.util;
+package de.infonautika.streamjoin.streamutils;
 
 import java.util.LinkedList;
 import java.util.List;

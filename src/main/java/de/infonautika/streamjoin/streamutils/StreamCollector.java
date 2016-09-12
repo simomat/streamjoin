@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.util;
+package de.infonautika.streamjoin.streamutils;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -36,4 +36,7 @@ public class StreamCollector<T> implements Collector<T, CombiningStreamBuilder<T
         return EnumSet.of(Characteristics.UNORDERED);
     }
 
+    public static <T> StreamCollector<T> toStream() {
+        return new StreamCollector<>();
+    }
 }

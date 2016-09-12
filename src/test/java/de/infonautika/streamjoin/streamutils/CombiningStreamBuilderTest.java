@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.util;
+package de.infonautika.streamjoin.streamutils;
 
 import org.junit.Test;
 

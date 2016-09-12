@@ -1,11 +1,14 @@
-package de.infonautika.streamjoin.joins.util;
+package de.infonautika.streamjoin.streamutils;
 
+import de.infonautika.streamjoin.joins.repo.Department;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.joins.repo.TestRepository.getDepartments;
+import static de.infonautika.streamjoin.streamutils.StreamCollector.toStream;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -59,4 +62,15 @@ public class StreamCollectorTest {
         assertThat(collected, contains(2));
     }
 
+    @Test
+    public void staticInitializerBuildsStreamCollector() throws Exception {
+        List<Department> actual = getDepartments()
+                .collect(toStream())
+                .collect(toList());
+
+        List<Department> expected = getDepartments()
+                .collect(toList());
+
+        assertThat(actual, containsInAnyOrder(expected.toArray()));
+    }
 }

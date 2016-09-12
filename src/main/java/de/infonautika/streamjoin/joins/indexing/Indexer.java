@@ -1,6 +1,6 @@
 package de.infonautika.streamjoin.joins.indexing;
 
-import de.infonautika.streamjoin.joins.util.StreamCollector;
+import de.infonautika.streamjoin.streamutils.StreamCollector;
 
 import java.util.List;
 import java.util.Map;
@@ -8,6 +8,7 @@ import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.streamutils.StreamCollector.toStream;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
@@ -41,7 +42,7 @@ public class Indexer<L, R, K> {
     }
 
     public DataMap<L, R, K> getIndexedMap() {
-        Map<K, Stream<L>> leftKeyToLeft = collect(left, leftKey, new StreamCollector<>());
+        Map<K, Stream<L>> leftKeyToLeft = collect(left, leftKey, toStream());
         Map<K, List<R>> rightKeyToRight = collect(right, rightKey, toList());
 
         return new DataMap<>(
