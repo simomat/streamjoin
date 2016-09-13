@@ -6,6 +6,7 @@ import de.infonautika.streamjoin.consumer.MatchConsumer;
 import de.infonautika.streamjoin.joins.*;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -13,14 +14,17 @@ import java.util.stream.Stream;
 public class Join {
 
     public static <L> LeftSide<L> join(Stream<L> left) {
+        Objects.requireNonNull(left);
         return new LeftSide<>(left, JoinType.INNER);
     }
 
     public static <L> LeftSide<L> leftOuter(Stream<L> left) {
+        Objects.requireNonNull(left);
         return new LeftSide<>(left, JoinType.LEFT_OUTER);
     }
 
     public static <L> LeftSide<L> fullOuter(Stream<L> left) {
+        Objects.requireNonNull(left);
         return new LeftSide<>(left, JoinType.FULL_OUTER);
     }
 
@@ -38,6 +42,7 @@ public class Join {
         }
 
         public <K> LeftKey<L, K> withKey(Function<L, K> leftKeyFunction) {
+            Objects.requireNonNull(leftKeyFunction);
             return new LeftKey<>(leftKeyFunction, this);
         }
     }
@@ -53,6 +58,7 @@ public class Join {
         }
 
         public <R> RightSide<L, R, K> on(Stream<R> right) {
+            Objects.requireNonNull(right);
             return new RightSide<>(right, this);
         }
     }
@@ -67,6 +73,7 @@ public class Join {
         }
 
         public RightKey<L, R, K> withKey(Function<R, K> rightKeyFunction) {
+            Objects.requireNonNull(rightKeyFunction);
             return new RightKey<>(rightKeyFunction, this);
         }
     }
@@ -81,11 +88,13 @@ public class Join {
         }
 
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
+            Objects.requireNonNull(combiner);
             return createJoiner(new CombiningConsumer<>(combiner))
                     .doJoin();
         }
 
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+            Objects.requireNonNull(grouper);
             return createJoiner(new GroupingConsumer<>(grouper))
                     .doJoin();
         }
