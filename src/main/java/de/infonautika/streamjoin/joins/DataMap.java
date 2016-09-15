@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.indexing;
+package de.infonautika.streamjoin.joins;
 
 import java.util.HashSet;
 import java.util.List;

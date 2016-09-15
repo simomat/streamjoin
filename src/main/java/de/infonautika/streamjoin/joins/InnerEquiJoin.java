@@ -1,7 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
 import de.infonautika.streamjoin.consumer.MatchConsumer;
-import de.infonautika.streamjoin.joins.indexing.DataMap;
 import de.infonautika.streamjoin.joins.indexing.Indexer;
 
 import java.util.List;
