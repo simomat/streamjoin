@@ -20,7 +20,8 @@ public class InnerEquiJoin<L, R, K, Y> implements JoinStrategy<L, R, Y> {
     @Override
     public void join(MatchConsumer<L, R, Y> consumer) {
         this.consumer = consumer;
-        map = indexer.getIndexedMap();
+        indexer.collectResult((leftKeyToLeft, rightKeyToRight, leftNull, rightNull) ->
+                map = new DataMap<>(leftKeyToLeft, rightKeyToRight, leftNull, rightNull));
         doJoin();
     }
 

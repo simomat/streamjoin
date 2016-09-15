@@ -15,7 +15,7 @@ public class DataMap<L, R, K> {
     private final Stream<L> leftNull;
     private final List<R> rightNull;
 
-    DataMap(Map<K, Stream<L>> leftKeyToLeft, Map<K, List<R>> rightKeyToRight, Stream<L> leftNull, List<R> rightNull) {
+    public DataMap(Map<K, Stream<L>> leftKeyToLeft, Map<K, List<R>> rightKeyToRight, Stream<L> leftNull, List<R> rightNull) {
         this.leftKeyToLeft = leftKeyToLeft;
         this.rightKeyToRight = rightKeyToRight;
         this.leftNull = leftNull == null ? Stream.empty() : leftNull;

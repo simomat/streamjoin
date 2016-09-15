@@ -39,11 +39,11 @@ public class Indexer<L, R, K> {
         };
     }
 
-    public DataMap<L, R, K> getIndexedMap() {
+    public void collectResult(IndexResult<L, R, K> collector) {
         Map<K, Stream<L>> leftKeyToLeft = collect(left, leftKey, toStream());
         Map<K, List<R>> rightKeyToRight = collect(right, rightKey, toList());
 
-        return new DataMap<>(
+        collector.accept(
                 leftKeyToLeft,
                 rightKeyToRight,
                 leftKeyToLeft.remove(Indexer.<K>nullKey()),
