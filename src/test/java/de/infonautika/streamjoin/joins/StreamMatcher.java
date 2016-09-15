@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.indexing;
+package de.infonautika.streamjoin.joins;
 
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;

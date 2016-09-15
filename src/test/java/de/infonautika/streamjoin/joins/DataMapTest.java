@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.indexing;
+package de.infonautika.streamjoin.joins;
 
 import org.junit.Test;
 
@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
-import static de.infonautika.streamjoin.joins.indexing.StreamMatcher.isEmptyStream;
-import static de.infonautika.streamjoin.joins.indexing.StreamMatcher.isStreamOf;
+import static de.infonautika.streamjoin.joins.StreamMatcher.isEmptyStream;
+import static de.infonautika.streamjoin.joins.StreamMatcher.isStreamOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -18,9 +18,7 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Matchers.same;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class DataMapTest {
 

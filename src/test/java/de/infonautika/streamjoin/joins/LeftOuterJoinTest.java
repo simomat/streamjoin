@@ -1,7 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
 import de.infonautika.streamjoin.consumer.CombiningConsumer;
-import de.infonautika.streamjoin.joins.indexing.Indexer;
 import de.infonautika.streamjoin.joins.repo.Department;
 import de.infonautika.streamjoin.joins.repo.Employee;
 import de.infonautika.streamjoin.joins.repo.Tuple;
@@ -10,6 +9,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.joins.DataMapSuppliers.dataMapOf;
 import static de.infonautika.streamjoin.joins.repo.TestRepository.*;
 import static de.infonautika.streamjoin.joins.repo.Tuple.tuple;
 import static java.util.stream.Collectors.toList;
@@ -66,11 +66,12 @@ public class LeftOuterJoinTest {
         List<Tuple<Department, Employee>> joined =
                 new Joiner<>(
                         new LeftOuterJoin<>(
-                                new Indexer<>(
+                                dataMapOf(
                                         Stream.of(stock),
                                         Department::getId,
                                         Stream.of(rafael, unterberg),
-                                        Employee::getDepartmentId)),
+                                        Employee::getDepartmentId
+                                )),
                         new CombiningConsumer<>(Tuple::new)
                 )
                 .doJoin()
@@ -136,7 +137,7 @@ public class LeftOuterJoinTest {
     private List<Tuple<Employee, Department>> leftOuterJoin(Stream<Employee> left, Stream<Department> right) {
         return new Joiner<>(
                 new LeftOuterJoin<>(
-                        new Indexer<>(
+                        dataMapOf(
                                 left,
                                 Employee::getDepartmentId,
                                 right,

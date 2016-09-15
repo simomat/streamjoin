@@ -1,7 +1,6 @@
 package de.infonautika.streamjoin.joins;
 
 import de.infonautika.streamjoin.consumer.CombiningConsumer;
-import de.infonautika.streamjoin.joins.indexing.Indexer;
 import de.infonautika.streamjoin.joins.repo.Department;
 import de.infonautika.streamjoin.joins.repo.Employee;
 import de.infonautika.streamjoin.joins.repo.Tuple;
@@ -10,6 +9,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.joins.DataMapSuppliers.dataMapOf;
 import static de.infonautika.streamjoin.joins.repo.TestRepository.*;
 import static de.infonautika.streamjoin.joins.repo.Tuple.tuple;
 import static java.util.stream.Collectors.toList;
@@ -46,7 +46,7 @@ public class FullOuterJoinTest {
 
         List<Tuple<Employee, Department>> joined = new Joiner<>(
                 new FullOuterJoin<>(
-                        new Indexer<>(
+                        dataMapOf(
                                 Stream.of(rafael, unterberg),
                                 Employee::getDepartmentId,
                                 Stream.of(stock, finance),
@@ -78,7 +78,7 @@ public class FullOuterJoinTest {
 
         List<Tuple<Department, Employee>> joined = new Joiner<>(
                 new FullOuterJoin<>(
-                        new Indexer<>(
+                        dataMapOf(
                                 Stream.of(stock),
                                 Department::getId,
                                 Stream.of(rafael, unterberg),
@@ -149,10 +149,11 @@ public class FullOuterJoinTest {
     private List<Tuple<Employee, Department>> outerJoin(Stream<Employee> left, Stream<Department> right) {
         return new Joiner<>(
                 new FullOuterJoin<>(
-                        new Indexer<>(left,
-                                Employee::getDepartmentId,
-                                right,
-                                Department::getId)),
+                        dataMapOf(
+                            left,
+                            Employee::getDepartmentId,
+                            right,
+                            Department::getId)),
                 new CombiningConsumer<>(Tuple::new))
                 .doJoin()
                 .collect(toList());

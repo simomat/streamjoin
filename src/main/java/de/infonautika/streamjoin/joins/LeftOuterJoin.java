@@ -1,9 +1,8 @@
 package de.infonautika.streamjoin.joins;
 
-import de.infonautika.streamjoin.joins.indexing.Indexer;
-
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.util.Collections.singletonList;
@@ -13,8 +12,8 @@ public class LeftOuterJoin<L, R, K, Y> extends InnerEquiJoin<L, R, K, Y> {
     private Set<K> unmatchedLeft;
     private final List<R> nullList = singletonList((R) null);
 
-    public LeftOuterJoin(Indexer<L, R, K> indexer) {
-        super(indexer);
+    public LeftOuterJoin(Supplier<DataMap<L, R, K>> dataMapSupplier) {
+        super(dataMapSupplier);
     }
 
     @Override

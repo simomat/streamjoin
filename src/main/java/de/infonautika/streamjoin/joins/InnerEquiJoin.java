@@ -1,26 +1,25 @@
 package de.infonautika.streamjoin.joins;
 
 import de.infonautika.streamjoin.consumer.MatchConsumer;
-import de.infonautika.streamjoin.joins.indexing.Indexer;
 
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 public class InnerEquiJoin<L, R, K, Y> implements JoinStrategy<L, R, Y> {
 
-    private final Indexer<L, R, K> indexer;
     protected MatchConsumer<L, R, Y> consumer;
     protected DataMap<L, R, K> map;
+    private Supplier<DataMap<L, R, K>> dataMapSupplier;
 
-    public InnerEquiJoin(Indexer<L, R, K> indexer) {
-        this.indexer = indexer;
+    public InnerEquiJoin(Supplier<DataMap<L, R, K>> dataMapSupplier) {
+        this.dataMapSupplier = dataMapSupplier;
     }
 
     @Override
     public void join(MatchConsumer<L, R, Y> consumer) {
         this.consumer = consumer;
-        indexer.collectResult((leftKeyToLeft, rightKeyToRight, leftNull, rightNull) ->
-                map = new DataMap<>(leftKeyToLeft, rightKeyToRight, leftNull, rightNull));
+        map = dataMapSupplier.get();
         doJoin();
     }
 

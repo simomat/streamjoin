@@ -4,12 +4,14 @@ import de.infonautika.streamjoin.consumer.CombiningConsumer;
 import de.infonautika.streamjoin.consumer.GroupingConsumer;
 import de.infonautika.streamjoin.consumer.MatchConsumer;
 import de.infonautika.streamjoin.joins.*;
-import de.infonautika.streamjoin.joins.indexing.Indexer;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static de.infonautika.streamjoin.joins.DataMapSuppliers.dataMapOf;
 
 public class Join {
 
@@ -102,13 +104,13 @@ public class Join {
         private <Y> Joiner<L, R, Y> createJoiner(MatchConsumer<L, R, Y> consumer) {
             return new Joiner<>(
                     createJoinStrategy(
-                            getIndexer(),
+                            getDataMapSupplier(),
                             getJoinType()),
                     consumer);
         }
 
-        private Indexer<L, R, K> getIndexer() {
-            return new Indexer<>(
+        private Supplier<DataMap<L, R, K>> getDataMapSupplier() {
+            return dataMapOf(
                     rightSide.leftKey.leftSide.left,
                     rightSide.leftKey.leftKeyFunction,
                     rightSide.right,
@@ -119,17 +121,17 @@ public class Join {
             return rightSide.leftKey.leftSide.joinType;
         }
 
-        private <Y> JoinStrategy<L, R, Y> createJoinStrategy(Indexer<L, R, K> indexer, JoinType joinType) {
+        private <L, R, Y> JoinStrategy<L, R, Y> createJoinStrategy(Supplier<DataMap<L, R, K>> dataMapSupplier, JoinType joinType) {
             if (joinType.equals(JoinType.INNER)) {
-                return new InnerEquiJoin<>(indexer);
+                return new InnerEquiJoin<>(dataMapSupplier);
             }
 
             if (joinType.equals(JoinType.LEFT_OUTER)) {
-                return new LeftOuterJoin<>(indexer);
+                return new LeftOuterJoin<>(dataMapSupplier);
             }
 
             if (joinType.equals(JoinType.FULL_OUTER)) {
-                return new FullOuterJoin<>(indexer);
+                return new FullOuterJoin<>(dataMapSupplier);
             }
 
             throw new UnsupportedOperationException();

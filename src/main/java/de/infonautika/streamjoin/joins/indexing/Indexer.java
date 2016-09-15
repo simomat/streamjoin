@@ -1,27 +1,23 @@
 package de.infonautika.streamjoin.joins.indexing;
 
-import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
 
-import static de.infonautika.streamjoin.streamutils.StreamCollector.toStream;
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 
-public class Indexer<L, R, K> {
+public class Indexer<T, K, D> {
     private static final Object NULLKEY = new Object();
-    private final Stream<L> left;
-    private final Function<L, K> leftKey;
-    private final Stream<R> right;
-    private final Function<R, K> rightKey;
+    private final Stream<T> left;
+    private final Function<T, K> leftKey;
+    private Collector<T, ?, D> downstream;
 
-    public Indexer(Stream<L> left, Function<L, K> leftKey, Stream<R> right, Function<R, K> rightKey) {
+    public Indexer(Stream<T> left, Function<T, K> leftKey, Collector<T, ?, D> downstream) {
         this.left = left;
         this.leftKey = leftKey;
-        this.right = right;
-        this.rightKey = rightKey;
+        this.downstream = downstream;
     }
 
     private static <T> T nullKey() {
@@ -39,18 +35,15 @@ public class Indexer<L, R, K> {
         };
     }
 
-    public void collectResult(IndexResult<L, R, K> collector) {
-        Map<K, Stream<L>> leftKeyToLeft = collect(left, leftKey, toStream());
-        Map<K, List<R>> rightKeyToRight = collect(right, rightKey, toList());
+    public void consume(BiConsumer<Map<K, D>, D> collector) {
+        Map<K, D> leftKeyToLeft = collect(left, leftKey);
 
         collector.accept(
                 leftKeyToLeft,
-                rightKeyToRight,
-                leftKeyToLeft.remove(Indexer.<K>nullKey()),
-                rightKeyToRight.remove(Indexer.<K>nullKey()));
+                leftKeyToLeft.remove(Indexer.<K>nullKey()));
     }
 
-    private <T, D> Map<K, D> collect(Stream<T> stream, Function<T, K> classifier, Collector<T, ?, D> downstream) {
+    private Map<K, D> collect(Stream<T> stream, Function<T, K> classifier) {
         return stream.collect(
                 groupingBy(
                         nullTolerantClassifier(classifier),
