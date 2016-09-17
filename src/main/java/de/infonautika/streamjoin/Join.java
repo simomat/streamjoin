@@ -91,16 +91,14 @@ public class Join {
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
             Objects.requireNonNull(combiner);
 
-//            return FunctionalJoin.joinWithCombiner(
-//                    rightSide.leftKey.leftSide.left,
-//                    rightSide.leftKey.leftKeyFunction,
-//                    rightSide.right,
-//                    rightKeyFunction,
-//                    combiner
-//            );
+            return FunctionalJoin.joinWithCombiner(
+                    rightSide.leftKey.leftSide.left,
+                    rightSide.leftKey.leftKeyFunction,
+                    rightSide.right,
+                    rightKeyFunction,
+                    combiner
+            );
 
-            return createJoiner(new CombiningConsumer<>(combiner))
-                    .doJoin();
         }
 
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {

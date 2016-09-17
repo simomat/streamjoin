@@ -32,6 +32,25 @@ public class FunctionalJoin {
                                 .map(l -> grouper.apply(l, rightElements.stream())));
     }
 
+    public static <Y, L, R, K> Stream<Y> joinWithCombiner(
+            Stream<L> left,
+            Function<L, K> leftKeyFunction,
+            Stream<R> right,
+            Function<R, K> rightKeyFunction,
+            BiFunction<L, R, Y> combiner) {
+
+
+        return join(
+                left,
+                leftKeyFunction,
+                right,
+                rightKeyFunction,
+                (leftElements, rightElements) -> leftElements
+                        .map(l -> rightElements.stream().map(r -> combiner.apply(l, r)))
+                        .flatMap(identity())
+        );
+    }
+
     private static <L, R, K, Y> Stream<Y> join(
             Stream<L> left,
             Function<L, K> leftKeyFunction,
@@ -40,7 +59,7 @@ public class FunctionalJoin {
             BiFunction<Stream<L>, List<R>, Stream<Y>> resultPart) {
 
         Stream.Builder<Stream<Y>> builder = Stream.builder();
-        joinWithGrouper(
+        joinWithIndexedRightAndMatcher(
                 left,
                 leftKeyFunction,
                 getMap(right, rightKeyFunction, toList())::get,
@@ -50,7 +69,7 @@ public class FunctionalJoin {
         return builder.build().flatMap(identity());
     }
 
-    private static <L, K, R> void joinWithGrouper(
+    private static <L, K, R> void joinWithIndexedRightAndMatcher(
             Stream<L> left,
             Function<L, K> leftKeyFunction,
             Function<K, List<R>> rightIndexed,
@@ -82,6 +101,7 @@ public class FunctionalJoin {
     private static <K> K nullKey() {
         return (K) NULLKEY;
     }
+
 
 
 }
