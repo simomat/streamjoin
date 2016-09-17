@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
@@ -23,27 +22,32 @@ public class FunctionalJoin {
             Function<R, K> rightKeyFunction,
             BiFunction<L, Stream<R>, Y> grouper) {
 
-        Stream.Builder<Stream<Y>> builder = Stream.builder();
-        Consumer<Stream<Y>> partConsumer = builder;
-        join(
+        return join(
                 left,
                 leftKeyFunction,
                 right,
                 rightKeyFunction,
                 (leftElements, rightElements) ->
-                        partConsumer.accept(
                             leftElements
-                                .map(l -> grouper.apply(l, rightElements.stream()))));
-
-        return builder.build().flatMap(identity());
+                                .map(l -> grouper.apply(l, rightElements.stream())));
     }
 
-    private static <L, R, K> void join(Stream<L> left, Function<L, K> leftKeyFunction, Stream<R> right, Function<R, K> rightKeyFunction, BiConsumer<Stream<L>, List<R>> consumer) {
+    private static <L, R, K, Y> Stream<Y> join(
+            Stream<L> left,
+            Function<L, K> leftKeyFunction,
+            Stream<R> right,
+            Function<R, K> rightKeyFunction,
+            BiFunction<Stream<L>, List<R>, Stream<Y>> resultPart) {
+
+        Stream.Builder<Stream<Y>> builder = Stream.builder();
         joinWithGrouper(
                 left,
                 leftKeyFunction,
                 getMap(right, rightKeyFunction, toList())::get,
-                consumer);
+                (leftElements, rightElements) ->
+                        builder.accept(resultPart.apply(leftElements, rightElements)));
+
+        return builder.build().flatMap(identity());
     }
 
     private static <L, K, R> void joinWithGrouper(
