@@ -25,8 +25,8 @@ public class LeftOuterJoin<L, R, K, Y> extends InnerEquiJoin<L, R, K, Y> {
     }
 
     @Override
-    protected void consumeMatch(K lKey, Stream<L> leftElements, List<R> rightElements) {
-        super.consumeMatch(lKey, leftElements, rightElements);
+    protected void handleMatchOfKey(K lKey, Stream<L> leftElements, List<R> rightElements) {
+        handleMatch(leftElements, rightElements);
         keyMatched(lKey);
     }
 
@@ -39,14 +39,14 @@ public class LeftOuterJoin<L, R, K, Y> extends InnerEquiJoin<L, R, K, Y> {
     }
 
     protected void handleKeyNullElements() {
-        addNullMatch(map.getLeftNullKeyElements());
+        addNullMatchLeft(map.getLeftNullKeyElements());
     }
 
     protected void handleUnmatched() {
-        unmatchedLeft.forEach(key -> addNullMatch(map.getLeft(key)));
+        unmatchedLeft.forEach(key -> addNullMatchLeft(map.getLeft(key)));
     }
 
-    private void addNullMatch(Stream<L> left) {
-        consumer.accept(left, nullList);
+    private void addNullMatchLeft(Stream<L> left) {
+        handleMatch(left, nullList);
     }
 }

@@ -40,7 +40,7 @@ public class FullOuterJoin<L, R, K, Y> extends LeftOuterJoin<L, R, K, Y> {
     }
 
     private void addNullMatchRight(List<R> rightKeyNullElements) {
-        consumer.accept(Stream.of(leftNull), rightKeyNullElements);
+        handleMatch(Stream.of(leftNull), rightKeyNullElements);
     }
 
 }

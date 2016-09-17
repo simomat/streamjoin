@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public class InnerEquiJoin<L, R, K, Y> implements JoinStrategy<L, R, Y> {
 
-    protected MatchConsumer<L, R, Y> consumer;
+    private MatchConsumer<L, R, Y> consumer;
     protected DataMap<L, R, K> map;
     private Supplier<DataMap<L, R, K>> dataMapSupplier;
 
@@ -27,12 +27,16 @@ public class InnerEquiJoin<L, R, K, Y> implements JoinStrategy<L, R, Y> {
         map.forEachLeft((lKey, leftElements) -> {
             List<R> rightElements = map.getRight(lKey);
             if (rightElements != null) {
-                consumeMatch(lKey, leftElements, rightElements);
+                handleMatchOfKey(lKey, leftElements, rightElements);
             }
         });
     }
 
-    protected void consumeMatch(K lKey, Stream<L> leftElements, List<R> rightElements) {
+    protected void handleMatchOfKey(K lKey, Stream<L> leftElements, List<R> rightElements) {
+        handleMatch(leftElements, rightElements);
+    }
+
+    protected void handleMatch(Stream<L> leftElements, List<R> rightElements) {
         consumer.accept(leftElements, rightElements);
     }
 }
