@@ -10,13 +10,13 @@ import static java.util.stream.Collectors.groupingBy;
 
 public class Indexer<T, K, D> {
     private static final Object NULLKEY = new Object();
-    private final Stream<T> left;
-    private final Function<T, K> leftKey;
+    private final Stream<T> elements;
+    private final Function<T, K> classifier;
     private Collector<T, ?, D> downstream;
 
-    public Indexer(Stream<T> left, Function<T, K> leftKey, Collector<T, ?, D> downstream) {
-        this.left = left;
-        this.leftKey = leftKey;
+    public Indexer(Stream<T> elements, Function<T, K> classifier, Collector<T, ?, D> downstream) {
+        this.elements = elements;
+        this.classifier = classifier;
         this.downstream = downstream;
     }
 
@@ -36,11 +36,11 @@ public class Indexer<T, K, D> {
     }
 
     public void consume(BiConsumer<Map<K, D>, D> collector) {
-        Map<K, D> leftKeyToLeft = collect(left, leftKey);
+        Map<K, D> leyToCollected = collect(elements, classifier);
 
         collector.accept(
-                leftKeyToLeft,
-                leftKeyToLeft.remove(Indexer.<K>nullKey()));
+                leyToCollected,
+                leyToCollected.remove(Indexer.<K>nullKey()));
     }
 
     private Map<K, D> collect(Stream<T> stream, Function<T, K> classifier) {
