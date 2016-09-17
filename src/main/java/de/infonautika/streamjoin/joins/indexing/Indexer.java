@@ -25,9 +25,9 @@ public class Indexer<T, K, D> {
         return (T) NULLKEY;
     }
 
-    private static <T,K> Function<T, K> nullTolerantClassifier(Function<T, K> classifier) {
-        return l -> {
-            K key = classifier.apply(l);
+    private Function<T, K> nullTolerantClassifier() {
+        return item -> {
+            K key = classifier.apply(item);
             if (key == null) {
                 return nullKey();
             }
@@ -36,17 +36,17 @@ public class Indexer<T, K, D> {
     }
 
     public void consume(BiConsumer<Map<K, D>, D> collector) {
-        Map<K, D> leyToCollected = collect(elements, classifier);
+        Map<K, D> keyToCollected = collect(elements);
 
         collector.accept(
-                leyToCollected,
-                leyToCollected.remove(Indexer.<K>nullKey()));
+                keyToCollected,
+                keyToCollected.remove(Indexer.<K>nullKey()));
     }
 
-    private Map<K, D> collect(Stream<T> stream, Function<T, K> classifier) {
+    private Map<K, D> collect(Stream<T> stream) {
         return stream.collect(
                 groupingBy(
-                        nullTolerantClassifier(classifier),
+                        nullTolerantClassifier(),
                         downstream));
     }
 }
