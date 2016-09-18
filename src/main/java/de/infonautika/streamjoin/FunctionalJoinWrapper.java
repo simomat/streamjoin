@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.ClusteredCollector.clustered;
 import static java.util.function.Function.identity;
 
 public class FunctionalJoinWrapper {
@@ -101,10 +102,7 @@ public class FunctionalJoinWrapper {
         FunctionalJoin.joinWithClusterAndConsumers(
                 left,
                 leftKeyFunction,
-                right.collect(
-                        () -> new Clustered<>(rightKeyFunction),
-                        Clustered::accept,
-                        Clustered::combine),
+                right.collect(clustered(rightKeyFunction)),
                 consumer,
                 unmatchedLeftConsumer,
                 unmatchedRightConsumer
