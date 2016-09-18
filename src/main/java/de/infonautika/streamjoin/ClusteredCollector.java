@@ -13,7 +13,7 @@ public class ClusteredCollector<T, K> {
         this(classifier, new HashMap<>(), new ArrayList<>());
     }
 
-    private ClusteredCollector(Function<T, K> classifier, HashMap map, ArrayList nullKeyElements) {
+    private ClusteredCollector(Function<T, K> classifier, HashMap<K, List<T>> map, ArrayList<T> nullKeyElements) {
         this.classifier = classifier;
         this.map = map;
         this.nullKeyElements = nullKeyElements;
