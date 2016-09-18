@@ -1,18 +1,15 @@
 package de.infonautika.streamjoin;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static de.infonautika.streamjoin.streamutils.StreamCollector.toStream;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.toList;
 
 public class FunctionalJoin {
     public static <Y, L, R, K> Stream<Y> joinWithGrouper(
@@ -20,17 +17,53 @@ public class FunctionalJoin {
             Function<L, K> leftKeyFunction,
             Stream<R> right,
             Function<R, K> rightKeyFunction,
-            BiFunction<L, Stream<R>, Y> grouper) {
+            BiFunction<L, Stream<R>, Stream<Y>> grouper) {
 
-        return join(
+        Stream.Builder<Stream<Y>> builder = Stream.builder();
+        BiConsumer<L, Stream<R>> consumer = (l, rs) -> builder.accept(grouper.apply(l, rs));
+
+        joinWithClusterAndConsumer(
                 left,
                 leftKeyFunction,
-                right,
-                rightKeyFunction,
-                (leftElements, rightElements) ->
-                            leftElements
-                                .map(l -> grouper.apply(l, rightElements.stream())));
+                right.collect(
+                        () -> new Clustered<>(rightKeyFunction),
+                        Clustered::accept,
+                        Clustered::combine),
+                consumer
+        );
+
+        return builder.build()
+                .flatMap(identity());
     }
+
+    private static <L, R, K> void joinWithClusterAndConsumer(
+            Stream<L> left,
+            Function<L, K> leftKeyFunction,
+            Clustered<R, K> rightCluster,
+            BiConsumer<L, Stream<R>> grouper) {
+
+        Function<L, K> leftUnmatched = (l) -> null;
+        Consumer<R> rightUnmatchedConsumer = (r) -> {};
+
+        Set<K> matchedKeys = left
+                .map(leftElement -> Optional.ofNullable(leftKeyFunction.apply(leftElement))
+                        .map(key -> rightCluster.getCluster(key)
+                                .map((StreamToFunction<R, L, K>) cluster -> left1 -> {
+                                    grouper.accept(left1, cluster);
+                                    return key;
+                                })
+                                .orElse(leftUnmatched))
+                        .orElse(leftUnmatched)
+                        .apply(leftElement))
+                .filter(matchedKey -> matchedKey != null)
+                .collect(Collectors.toSet());
+
+        rightCluster.getMisfits(matchedKeys)
+                .forEach(rightUnmatchedConsumer);
+
+    }
+
+    private interface StreamToFunction<R, L, K> extends Function<Stream<R>, Function<L, K>> {}
 
     public static <Y, L, R, K> Stream<Y> joinWithCombiner(
             Stream<L> left,
@@ -39,69 +72,12 @@ public class FunctionalJoin {
             Function<R, K> rightKeyFunction,
             BiFunction<L, R, Y> combiner) {
 
-
-        return join(
+        return joinWithGrouper(
                 left,
                 leftKeyFunction,
                 right,
                 rightKeyFunction,
-                (leftElements, rightElements) -> leftElements
-                        .map(l -> rightElements.stream().map(r -> combiner.apply(l, r)))
-                        .flatMap(identity())
-        );
+                (leftElement, rightElements) ->
+                        rightElements.map(rightElement -> combiner.apply(leftElement, rightElement)));
     }
-
-    private static <L, R, K, Y> Stream<Y> join(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Stream<R> right,
-            Function<R, K> rightKeyFunction,
-            BiFunction<Stream<L>, List<R>, Stream<Y>> resultPart) {
-
-        Stream.Builder<Stream<Y>> builder = Stream.builder();
-        joinWithIndexedRightAndMatcher(
-                left,
-                leftKeyFunction,
-                getMap(right, rightKeyFunction, toList())::get,
-                (leftElements, rightElements) ->
-                        builder.accept(resultPart.apply(leftElements, rightElements)));
-
-        return builder.build().flatMap(identity());
-    }
-
-    private static <L, K, R> void joinWithIndexedRightAndMatcher(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Function<K, List<R>> rightIndexed,
-            BiConsumer<Stream<L>, List<R>> matcher) {
-
-        getMap(left, leftKeyFunction, toStream())
-                .forEach((key, leftDownstream) ->
-                        Optional.ofNullable(rightIndexed.apply(key))
-                                .ifPresent(rightDownstream -> matcher.accept(leftDownstream, rightDownstream)));
-    }
-
-    private static <T, K, D> Map<K, D> getMap(Stream<T> elements, Function<T, K> classifier, Collector<T, ?, D> downstream) {
-        Map<K, D> map = elements.collect(
-                groupingBy(
-                        nullTolerantClassifier(classifier),
-                        downstream));
-
-        map.remove(nullKey());
-        return map;
-    }
-
-    private static <T, K> Function<? super T, ? extends K> nullTolerantClassifier(Function<T, K> classifier) {
-        return element -> Optional.ofNullable(classifier.apply(element)).orElse(nullKey());
-    }
-
-    private static final Object NULLKEY =new Object();
-
-
-    private static <K> K nullKey() {
-        return (K) NULLKEY;
-    }
-
-
-
 }

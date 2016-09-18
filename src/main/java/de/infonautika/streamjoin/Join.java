@@ -104,13 +104,18 @@ public class Join {
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
             Objects.requireNonNull(grouper);
 
+            return groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
+        }
+
+        public <Y> Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> grouper) {
+            Objects.requireNonNull(grouper);
+
             return FunctionalJoin.joinWithGrouper(
                     rightSide.leftKey.leftSide.left,
                     rightSide.leftKey.leftKeyFunction,
                     rightSide.right,
                     rightKeyFunction,
-                    grouper
-            );
+                    grouper);
         }
 
         private <Y> Joiner<L, R, Y> createJoiner(MatchConsumer<L, R, Y> consumer) {
