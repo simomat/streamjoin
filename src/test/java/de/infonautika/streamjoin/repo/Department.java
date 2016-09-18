@@ -3,6 +3,7 @@ package de.infonautika.streamjoin.repo;
 import java.util.Objects;
 
 public class Department {
+    public static final Department sentinel = new DepartmentSentinel();
     private final Integer id;
     private final String departmentName;
 
@@ -35,5 +36,12 @@ public class Department {
                 "id=" + id +
                 ", departmentName='" + departmentName + '\'' +
                 '}';
+    }
+
+
+    private static class DepartmentSentinel extends Department {
+        public DepartmentSentinel() {
+            super(999, "SENTINEL");
+        }
     }
 }

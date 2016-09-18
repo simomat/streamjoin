@@ -50,9 +50,9 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     }
 
     private void describe(Description description, List<T> streamData) {
-        description.appendText("a stream of [");
+        description.appendText("stream of [");
         description.appendText(streamData.stream()
-                .map(Object::toString)
+                .map(t -> t == null ? "null" : t.toString())
                 .collect(Collectors.joining(", ")));
         description.appendText("]");
     }

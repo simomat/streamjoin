@@ -84,31 +84,81 @@ public class Join {
         }
 
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
-            Objects.requireNonNull(combiner);
-            return groupMany((l, rs) -> rs.map(r -> combiner.apply(l, r)));
+            return combine(combiner, null, null);
         }
+
+        public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner, Function<L, Y> unmatchedLeft) {
+            return combine(combiner, unmatchedLeft, null);
+        }
+
+        public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner, Function<L, Y> unmatchedLeft, Function<R, Y> unmatchedRight) {
+            Objects.requireNonNull(combiner);
+
+            checkJoinTypeMissmatch(unmatchedLeft, unmatchedRight);
+
+            if (getJoinType().equals(JoinType.LEFT_OUTER) || getJoinType().equals(JoinType.FULL_OUTER)) {
+                if (unmatchedLeft == null) {
+                    unmatchedLeft = l -> combiner.apply(l, null);
+                }
+            }
+
+            if (getJoinType().equals(JoinType.FULL_OUTER)) {
+                if (unmatchedRight == null) {
+                    unmatchedRight = r -> combiner.apply(null, r);
+                }
+            }
+
+
+            return groupMany(
+                    (l, rs) -> rs.map(r -> combiner.apply(l, r)),
+                    unmatchedLeft,
+                    unmatchedRight);
+        }
+
 
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            Objects.requireNonNull(grouper);
-            return groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
+            return group(grouper, null, null);
         }
 
-        public <Y> Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> grouper) {
+        public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper, Function<L, Y> unmatchedLeft) {
+            return group(grouper, unmatchedLeft, null);
+        }
+
+        public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper, Function<L, Y> unmatchedLeft, Function<R, Y> unmatchedRight) {
             Objects.requireNonNull(grouper);
 
-            JoinType joinType = getJoinType();
+            checkJoinTypeMissmatch(unmatchedLeft, unmatchedRight);
 
-            Function<L, Y> unmatchedLeft = null;
-            Function<R, Y> unmatchedRight = null;
-
-            if (joinType.equals(JoinType.LEFT_OUTER)) {
-                unmatchedLeft = (l) -> null;
+            if (getJoinType().equals(JoinType.LEFT_OUTER) || getJoinType().equals(JoinType.FULL_OUTER)) {
+                if (unmatchedLeft == null) {
+                    unmatchedLeft = l -> grouper.apply(l, null);
+                }
             }
 
-            if (joinType.equals(JoinType.FULL_OUTER)) {
-                unmatchedLeft = (l) -> null;
-                unmatchedRight = (r) -> null;
+            if (getJoinType().equals(JoinType.FULL_OUTER)) {
+                if (unmatchedRight == null) {
+                    unmatchedRight = r -> grouper.apply(null, Stream.of(r));
+                }
             }
+
+            return groupMany(
+                    (left, rightStream) -> Stream.of(grouper.apply(left, rightStream)),
+                    unmatchedLeft,
+                    unmatchedRight);
+        }
+
+        private <Y> void checkJoinTypeMissmatch(Function<L, Y> unmatchedLeft, Function<R, Y> unmatchedRight) {
+            if (getJoinType().equals(JoinType.INNER) && (unmatchedLeft != null || unmatchedRight != null)) {
+                throw new IllegalArgumentException("no unmatched element handler supported in inner joins");
+            }
+
+            if (getJoinType().equals(JoinType.LEFT_OUTER) && unmatchedRight != null) {
+                throw new IllegalArgumentException("no unmatched element handler for right elements supported in left outer join.");
+            }
+        }
+
+        private <Y> Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> grouper, Function<L, Y> unmatchedLeft, Function<R, Y> unmatchedRight) {
+            Objects.requireNonNull(grouper);
 
             return JoinWrapper.joinWithParameters(
                     rightSide.leftKey.leftSide.left,

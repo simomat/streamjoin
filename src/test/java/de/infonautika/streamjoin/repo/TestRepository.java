@@ -13,6 +13,7 @@ public class TestRepository {
     public static final Employee robinson = new Employee(34, "Robinson");
     public static final Employee smith = new Employee(34, "Smith");
     public static final Employee williams = new Employee(null, "Williams");
+    public static final Employee scruffy = new Employee(99, "Scruffy");
 
     public static final Department sales = new Department(31, "Sales");
     public static final Department salesTwo = new Department(31, "SalesTwo");
@@ -27,7 +28,8 @@ public class TestRepository {
             heisenberg,
             robinson,
             smith,
-            williams));
+            williams,
+            scruffy));
 
     private static final List<Department> departments = unmodifiableList(asList(
             sales,
