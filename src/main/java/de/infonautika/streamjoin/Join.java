@@ -1,6 +1,5 @@
 package de.infonautika.streamjoin;
 
-import de.infonautika.streamjoin.consumer.CombiningConsumer;
 import de.infonautika.streamjoin.consumer.MatchConsumer;
 import de.infonautika.streamjoin.joins.*;
 
@@ -91,7 +90,7 @@ public class Join {
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
             Objects.requireNonNull(combiner);
 
-            return FunctionalJoin.joinWithCombiner(
+            return FunctionalJoinWrapper.joinWithCombiner(
                     rightSide.leftKey.leftSide.left,
                     rightSide.leftKey.leftKeyFunction,
                     rightSide.right,
@@ -110,7 +109,9 @@ public class Join {
         public <Y> Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> grouper) {
             Objects.requireNonNull(grouper);
 
-            return FunctionalJoin.joinWithGrouper(
+
+
+            return FunctionalJoinWrapper.joinWithGrouper(
                     rightSide.leftKey.leftSide.left,
                     rightSide.leftKey.leftKeyFunction,
                     rightSide.right,

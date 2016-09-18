@@ -3,47 +3,24 @@ package de.infonautika.streamjoin;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.function.Function.identity;
-
 public class FunctionalJoin {
-    public static <Y, L, R, K> Stream<Y> joinWithGrouper(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Stream<R> right,
-            Function<R, K> rightKeyFunction,
-            BiFunction<L, Stream<R>, Stream<Y>> grouper) {
-
-        Stream.Builder<Stream<Y>> builder = Stream.builder();
-        BiConsumer<L, Stream<R>> consumer = (l, rs) -> builder.accept(grouper.apply(l, rs));
-
-        joinWithClusterAndConsumer(
-                left,
-                leftKeyFunction,
-                right.collect(
-                        () -> new Clustered<>(rightKeyFunction),
-                        Clustered::accept,
-                        Clustered::combine),
-                consumer
-        );
-
-        return builder.build()
-                .flatMap(identity());
-    }
-
-    private static <L, R, K> void joinWithClusterAndConsumer(
+    public static <L, R, K> void joinWithClusterAndConsumers(
             Stream<L> left,
             Function<L, K> leftKeyFunction,
             Clustered<R, K> rightCluster,
-            BiConsumer<L, Stream<R>> grouper) {
+            BiConsumer<L, Stream<R>> grouper,
+            Consumer<L> unmatchedLeftConsumer,
+            Consumer<R> unmatchedRightConsumer) {
 
-        Function<L, K> leftUnmatched = (l) -> null;
-        Consumer<R> rightUnmatchedConsumer = (r) -> {};
+        Function<L, K> leftUnmatched = l -> {
+            unmatchedLeftConsumer.accept(l);
+            return null;
+        };
 
         Set<K> matchedKeys = left
                 .map(leftElement -> Optional.ofNullable(leftKeyFunction.apply(leftElement))
@@ -59,25 +36,9 @@ public class FunctionalJoin {
                 .collect(Collectors.toSet());
 
         rightCluster.getMisfits(matchedKeys)
-                .forEach(rightUnmatchedConsumer);
+                .forEach(unmatchedRightConsumer);
 
     }
 
     private interface StreamToFunction<R, L, K> extends Function<Stream<R>, Function<L, K>> {}
-
-    public static <Y, L, R, K> Stream<Y> joinWithCombiner(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Stream<R> right,
-            Function<R, K> rightKeyFunction,
-            BiFunction<L, R, Y> combiner) {
-
-        return joinWithGrouper(
-                left,
-                leftKeyFunction,
-                right,
-                rightKeyFunction,
-                (leftElement, rightElements) ->
-                        rightElements.map(rightElement -> combiner.apply(leftElement, rightElement)));
-    }
 }
