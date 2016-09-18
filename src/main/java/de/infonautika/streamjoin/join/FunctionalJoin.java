@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin;
+package de.infonautika.streamjoin.join;
 
 import java.util.Optional;
 import java.util.Set;
@@ -8,8 +8,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FunctionalJoin {
-    public static <L, R, K> void joinWithClusterAndConsumers(
+class FunctionalJoin {
+    static <L, R, K> void join(
             Stream<L> left,
             Function<L, K> leftKeyFunction,
             Clustered<R, K> rightCluster,

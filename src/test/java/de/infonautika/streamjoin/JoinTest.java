@@ -1,14 +1,14 @@
 package de.infonautika.streamjoin;
 
-import de.infonautika.streamjoin.joins.repo.Department;
-import de.infonautika.streamjoin.joins.repo.Employee;
-import de.infonautika.streamjoin.joins.repo.Tuple;
+import de.infonautika.streamjoin.repo.Department;
+import de.infonautika.streamjoin.repo.Employee;
+import de.infonautika.streamjoin.repo.Tuple;
 import org.junit.Test;
 
 import java.util.List;
 
-import static de.infonautika.streamjoin.joins.repo.TestRepository.*;
-import static de.infonautika.streamjoin.joins.repo.Tuple.tuple;
+import static de.infonautika.streamjoin.repo.TestRepository.*;
+import static de.infonautika.streamjoin.repo.Tuple.tuple;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;

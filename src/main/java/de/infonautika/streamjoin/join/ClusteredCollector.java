@@ -1,15 +1,15 @@
-package de.infonautika.streamjoin;
+package de.infonautika.streamjoin.join;
 
 import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
 
-public class ClusteredCollector<T, K> {
+class ClusteredCollector<T, K> {
     private Function<T, K> classifier;
     private Map<K, List<T>> map;
     private List<T> nullKeyElements;
 
-    public ClusteredCollector(Function<T, K> classifier) {
+    private ClusteredCollector(Function<T, K> classifier) {
         this(classifier, new HashMap<>(), new ArrayList<>());
     }
 
@@ -19,11 +19,11 @@ public class ClusteredCollector<T, K> {
         this.nullKeyElements = nullKeyElements;
     }
 
-    public void accept(T item) {
+    private void accept(T item) {
         withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
     }
 
-    public static <T, K> ClusteredCollector<T, K> combine(ClusteredCollector<T, K> first, ClusteredCollector<T, K> second) {
+    private static <T, K> ClusteredCollector<T, K> combine(ClusteredCollector<T, K> first, ClusteredCollector<T, K> second) {
         return merge(copyOf(first), second);
     }
 
@@ -37,7 +37,7 @@ public class ClusteredCollector<T, K> {
         return new ClusteredCollector<>(collector.classifier, new HashMap<>(collector.map), new ArrayList<>(collector.nullKeyElements));
     }
 
-    public Clustered<T, K> finish() {
+    private Clustered<T, K> finish() {
         return new Clustered<>(map, nullKeyElements);
     }
 
@@ -53,7 +53,7 @@ public class ClusteredCollector<T, K> {
     }
 
 
-    public static <T, K> Collector<T, ClusteredCollector<T, K>, Clustered<T, K>> clustered(Function<T, K> rightKeyFunction) {
+    static <T, K> Collector<T, ClusteredCollector<T, K>, Clustered<T, K>> clustered(Function<T, K> rightKeyFunction) {
         return new Collector<T, ClusteredCollector<T, K>, Clustered<T, K>>() {
             @Override
             public Supplier<ClusteredCollector<T, K>> supplier() {

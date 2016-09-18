@@ -1,15 +1,11 @@
 package de.infonautika.streamjoin;
 
-import de.infonautika.streamjoin.consumer.MatchConsumer;
-import de.infonautika.streamjoin.joins.*;
+import de.infonautika.streamjoin.join.JoinWrapper;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
-
-import static de.infonautika.streamjoin.joins.DataMapSuppliers.dataMapOf;
 
 public class Join {
 
@@ -89,71 +85,46 @@ public class Join {
 
         public <Y> Stream<Y> combine(BiFunction<L, R, Y> combiner) {
             Objects.requireNonNull(combiner);
-
-            return FunctionalJoinWrapper.joinWithCombiner(
-                    rightSide.leftKey.leftSide.left,
-                    rightSide.leftKey.leftKeyFunction,
-                    rightSide.right,
-                    rightKeyFunction,
-                    combiner
-            );
-
+            return groupMany((l, rs) -> rs.map(r -> combiner.apply(l, r)));
         }
 
         public <Y> Stream<Y> group(BiFunction<L, Stream<R>, Y> grouper) {
             Objects.requireNonNull(grouper);
-
             return groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
         }
 
         public <Y> Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> grouper) {
             Objects.requireNonNull(grouper);
 
+            JoinType joinType = getJoinType();
 
+            Function<L, Y> unmatchedLeft = null;
+            Function<R, Y> unmatchedRight = null;
 
-            return FunctionalJoinWrapper.joinWithGrouper(
+            if (joinType.equals(JoinType.LEFT_OUTER)) {
+                unmatchedLeft = (l) -> null;
+            }
+
+            if (joinType.equals(JoinType.FULL_OUTER)) {
+                unmatchedLeft = (l) -> null;
+                unmatchedRight = (r) -> null;
+            }
+
+            return JoinWrapper.joinWithParameters(
                     rightSide.leftKey.leftSide.left,
                     rightSide.leftKey.leftKeyFunction,
                     rightSide.right,
                     rightKeyFunction,
-                    grouper);
-        }
-
-        private <Y> Joiner<L, R, Y> createJoiner(MatchConsumer<L, R, Y> consumer) {
-            return new Joiner<>(
-                    createJoinStrategy(
-                            getDataMapSupplier(),
-                            getJoinType()),
-                    consumer);
-        }
-
-        private Supplier<DataMap<L, R, K>> getDataMapSupplier() {
-            return dataMapOf(
-                    rightSide.leftKey.leftSide.left,
-                    rightSide.leftKey.leftKeyFunction,
-                    rightSide.right,
-                    rightKeyFunction);
+                    grouper,
+                    unmatchedLeft,
+                    unmatchedRight);
         }
 
         private JoinType getJoinType() {
             return rightSide.leftKey.leftSide.joinType;
         }
 
-        private <L, R, Y> JoinStrategy<L, R, Y> createJoinStrategy(Supplier<DataMap<L, R, K>> dataMapSupplier, JoinType joinType) {
-            if (joinType.equals(JoinType.INNER)) {
-                return new InnerEquiJoin<>(dataMapSupplier);
-            }
 
-            if (joinType.equals(JoinType.LEFT_OUTER)) {
-                return new LeftOuterJoin<>(dataMapSupplier);
-            }
-
-            if (joinType.equals(JoinType.FULL_OUTER)) {
-                return new FullOuterJoin<>(dataMapSupplier);
-            }
-
-            throw new UnsupportedOperationException();
-        }
     }
 
 }

@@ -1,4 +1,4 @@
-package de.infonautika.streamjoin.joins.repo;
+package de.infonautika.streamjoin.repo;
 
 import java.util.Objects;
 
