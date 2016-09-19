@@ -24,7 +24,8 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .combine(Tuple::tuple);
+                .combine(Tuple::tuple)
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, rafferty),
@@ -42,7 +43,8 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .group((d, es) -> tuple(d, es.collect(toSet())));
+                .group((d, es) -> tuple(d, es.collect(toSet())))
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, asSet(rafferty)),
@@ -58,7 +60,8 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .combine(Tuple::tuple);
+                .combine(Tuple::tuple)
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, rafferty),
@@ -78,8 +81,9 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .group((d, es) -> tuple(d, es.collect(toSet())),
-                        l -> tuple(l, asSet()));
+                .group((d, es) -> tuple(d, es.collect(toSet())))
+                .withLeftUnmatched(l -> tuple(l, asSet()))
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, asSet(rafferty)),
@@ -97,7 +101,8 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .combine(Tuple::tuple);
+                .combine(Tuple::tuple)
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, rafferty),
@@ -119,9 +124,10 @@ public class JoinTest {
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
-                .group((d, es) -> tuple(d, es.collect(toSet())),
-                        l -> tuple(l, asSet()),
-                        r -> tuple(Department.sentinel, asSet(r)));
+                .group((d, es) -> tuple(d, es.collect(toSet())))
+                .withRightUnmatched(r -> tuple(Department.sentinel, asSet(r)))
+                .withLeftUnmatched(l -> tuple(l, asSet()))
+                .asStream();
 
         assertThat(joined, isStreamOf(asList(
                 Tuple.tuple(sales, asSet(rafferty)),
