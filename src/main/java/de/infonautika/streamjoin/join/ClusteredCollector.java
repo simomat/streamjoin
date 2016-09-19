@@ -81,7 +81,7 @@ class ClusteredCollector<T, K> {
 
             @Override
             public Set<Characteristics> characteristics() {
-                return EnumSet.of(Characteristics.UNORDERED, Characteristics.CONCURRENT);
+                return EnumSet.of(Characteristics.UNORDERED);
             }
         };
     }
