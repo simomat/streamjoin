@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
 public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
@@ -17,8 +17,8 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     private List<T> actualData;
     private Stream<T> actualStream;
 
-    public StreamMatcher(List<T> data) {
-        this.data = data;
+    public StreamMatcher(T... data) {
+        this.data = asList(data);
     }
 
     @Override
@@ -58,11 +58,12 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     }
 
 
-    public static <T> StreamMatcher<T> isStreamOf(List<T> data) {
+    public static <T> StreamMatcher<T> isStreamOf(T... data) {
         return new StreamMatcher<>(data);
     }
 
     public static <T> StreamMatcher<T> isEmptyStream() {
-        return isStreamOf(emptyList());
+        //noinspection unchecked
+        return isStreamOf();
     }
 }

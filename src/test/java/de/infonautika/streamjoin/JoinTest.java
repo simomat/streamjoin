@@ -19,6 +19,7 @@ import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
+@SuppressWarnings("unchecked")
 public class JoinTest {
     @Test
     public void innerJoinWithCombiner() throws Exception {
@@ -30,13 +31,13 @@ public class JoinTest {
                 .combine(Tuple::tuple)
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, rafferty),
                 Tuple.tuple(salesTwo, rafferty),
                 Tuple.tuple(engineering, jones),
                 Tuple.tuple(engineering, heisenberg),
                 Tuple.tuple(clerical, robinson),
-                Tuple.tuple(clerical, smith))));
+                Tuple.tuple(clerical, smith)));
     }
 
     @Test
@@ -49,7 +50,6 @@ public class JoinTest {
                 .combine(Tuple::tuple)
                 .collect(Collectors.toList());
 
-        //noinspection unchecked
         assertThat(joined, containsInAnyOrder(
                 Tuple.tuple(sales, rafferty),
                 Tuple.tuple(salesTwo, rafferty),
@@ -69,11 +69,11 @@ public class JoinTest {
                 .group((d, es) -> tuple(d, es.collect(toSet())))
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, asSet(rafferty)),
                 Tuple.tuple(salesTwo, asSet(rafferty)),
                 Tuple.tuple(engineering, asSet(jones,heisenberg)),
-                Tuple.tuple(clerical, asSet(robinson, smith)))));
+                Tuple.tuple(clerical, asSet(robinson, smith))));
     }
 
     @Test
@@ -86,7 +86,7 @@ public class JoinTest {
                 .combine(Tuple::tuple)
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, rafferty),
                 Tuple.tuple(salesTwo, rafferty),
                 Tuple.tuple(engineering, jones),
@@ -94,7 +94,7 @@ public class JoinTest {
                 Tuple.tuple(clerical, robinson),
                 Tuple.tuple(clerical, smith),
                 Tuple.tuple(marketing, null),
-                Tuple.tuple(storage, null))));
+                Tuple.tuple(storage, null)));
     }
 
     @Test
@@ -108,13 +108,13 @@ public class JoinTest {
                 .withLeftUnmatched(l -> tuple(l, asSet()))
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, asSet(rafferty)),
                 Tuple.tuple(salesTwo, asSet(rafferty)),
                 Tuple.tuple(engineering, asSet(jones,heisenberg)),
                 Tuple.tuple(clerical, asSet(robinson, smith)),
                 Tuple.tuple(marketing, asSet()),
-                Tuple.tuple(storage, asSet()))));
+                Tuple.tuple(storage, asSet())));
     }
 
     @Test
@@ -127,7 +127,7 @@ public class JoinTest {
                 .combine(Tuple::tuple)
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, rafferty),
                 Tuple.tuple(salesTwo, rafferty),
                 Tuple.tuple(engineering, jones),
@@ -137,7 +137,7 @@ public class JoinTest {
                 Tuple.tuple(marketing, null),
                 Tuple.tuple(storage, null),
                 Tuple.tuple(null, williams),
-                Tuple.tuple(null, scruffy))));
+                Tuple.tuple(null, scruffy)));
     }
 
     @Test
@@ -152,7 +152,7 @@ public class JoinTest {
                 .withLeftUnmatched(l -> tuple(l, asSet()))
                 .asStream();
 
-        assertThat(joined, isStreamOf(asList(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, asSet(rafferty)),
                 Tuple.tuple(salesTwo, asSet(rafferty)),
                 Tuple.tuple(engineering, asSet(jones,heisenberg)),
@@ -160,7 +160,7 @@ public class JoinTest {
                 Tuple.tuple(marketing, asSet()),
                 Tuple.tuple(storage, asSet()),
                 Tuple.tuple(Department.sentinel, asSet(williams)),
-                Tuple.tuple(Department.sentinel, asSet(scruffy)))));
+                Tuple.tuple(Department.sentinel, asSet(scruffy))));
     }
 
     private static <T> Set<T> asSet(T... items) {
