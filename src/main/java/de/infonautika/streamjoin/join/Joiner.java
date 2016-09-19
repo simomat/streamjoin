@@ -1,15 +1,11 @@
 package de.infonautika.streamjoin.join;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.function.Function.identity;
 
 public class Joiner {
 
@@ -22,49 +18,62 @@ public class Joiner {
             Function<L, Y> unmatchedLeft,
             Function<R, Y> unmatchedRight) {
 
-        Stream.Builder<Stream<Y>> builder = Stream.builder();
+        Clustered<K, R> rightCluster = right.collect(ClusteredCollector.clustered(rightKeyFunction));
 
-        joinWithParameters(
-                left,
-                leftKeyFunction,
-                right.collect(ClusteredCollector.clustered(rightKeyFunction)),
-                (l, rs) -> builder.accept(grouper.apply(l, rs)),
-                unmatchedLeft == null ? (l1) -> {} : l1 -> builder.accept(Stream.of(unmatchedLeft.apply(l1))),
-                unmatchedRight == null ? (r) -> {} : r -> builder.accept(Stream.of(unmatchedRight.apply(r))));
+        Function<L, ResultPart<K, Y>> leftUnmatched = l ->
+                unmatchedLeft == null ? null : new ResultPart<>(null, Stream.of(unmatchedLeft.apply(l)));
 
-        return builder.build()
-                .flatMap(identity());
-    }
-
-    private static <L, R, K> void joinWithParameters(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Clustered<K, R> rightCluster,
-            BiConsumer<L, Stream<R>> grouper,
-            Consumer<L> unmatchedLeftConsumer,
-            Consumer<R> unmatchedRightConsumer) {
-
-        Function<L, K> leftUnmatched = l -> {
-            unmatchedLeftConsumer.accept(l);
-            return null;
-        };
-
-        Set<K> matchedKeys = left
+        JoinFinished<K, Y> joinFinished = left
                 .map(leftElement -> Optional.ofNullable(leftKeyFunction.apply(leftElement))
                         .map(key -> rightCluster.getCluster(key)
-                                .map((StreamToFunction<R, L, K>) cluster -> l -> {
-                                    grouper.accept(l, cluster);
-                                    return key;})
+                                .map((StreamToLeftToResult<R, L, K, Y>) cluster -> l -> new ResultPart<>(key, grouper.apply(l, cluster)))
                                 .orElse(leftUnmatched))
                         .orElse(leftUnmatched)
                         .apply(leftElement))
-                .filter(matchedKey -> matchedKey != null)
-                .collect(Collectors.toSet());
+                .filter(result -> result != null)
+                .collect(JoinFinished::new,
+                        JoinFinished::accept,
+                        JoinFinished::combine);
 
-        rightCluster.getMisfits(matchedKeys)
-                .forEach(unmatchedRightConsumer);
+
+        if (unmatchedRight == null) {
+            return joinFinished.result;
+        }
+        return Stream.concat(
+                joinFinished.result,
+                rightCluster.getMisfits(joinFinished.keys)
+                        .map(unmatchedRight));
 
     }
 
-    private interface StreamToFunction<R, L, K> extends Function<Stream<R>, Function<L, K>> {}
+    private interface StreamToLeftToResult<R, L, K, Y> extends Function<Stream<R>, Function<L, ResultPart<K, Y>>> {}
+
+    private static class ResultPart<K, Y> {
+        private final K key;
+        private final Stream<Y> joined;
+        public ResultPart(K key, Stream<Y> joined) {
+            this.key = key;
+            this.joined = joined;
+        }
+    }
+
+    private static class JoinFinished<K, Y>  {
+        private final Set<K> keys = new HashSet<>();
+        private Stream<Y> result = Stream.empty();
+        public void accept(ResultPart<K, Y> resultPart) {
+            if (resultPart.key != null) {
+                keys.add(resultPart.key);
+            }
+            concatStream(resultPart.joined);
+        }
+
+        private void concatStream(Stream<Y> part) {
+            result = Stream.concat(result, part);
+        }
+
+        public void combine(JoinFinished<K, Y> other) {
+            keys.addAll(other.keys);
+            concatStream(other.result);
+        }
+    }
 }

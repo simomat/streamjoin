@@ -5,9 +5,9 @@ import java.util.function.*;
 import java.util.stream.Collector;
 
 class ClusteredCollector<T, K> {
-    private Function<T, K> classifier;
-    private Map<K, List<T>> map;
-    private List<T> nullKeyElements;
+    private final Function<T, K> classifier;
+    private final Map<K, List<T>> map;
+    private final List<T> nullKeyElements;
 
     private ClusteredCollector(Function<T, K> classifier) {
         this(classifier, new HashMap<>(), new ArrayList<>());

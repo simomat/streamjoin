@@ -218,16 +218,16 @@ public class Join {
     ////////////////
 
     public static class IJApply<L, R, K, Y> {
-        protected BiFunction<L, R, Y> combiner = null;
-        protected BiFunction<L, Stream<R>, Y> grouper = null;
+        BiFunction<L, R, Y> combiner = null;
+        BiFunction<L, Stream<R>, Y> grouper = null;
 
-        protected Function<L, Y> unmatchedLeft;
-        protected Function<R, Y> unmatchedRight;
+        Function<L, Y> unmatchedLeft;
+        Function<R, Y> unmatchedRight;
 
-        private Stream<L> left;
-        private Function<L, K> leftKeyFunction;
-        private Stream<R> right;
-        private Function<R, K> rightKeyFunction;
+        private final Stream<L> left;
+        private final Function<L, K> leftKeyFunction;
+        private final Stream<R> right;
+        private final Function<R, K> rightKeyFunction;
 
         public IJApply(Stream<L> left, Function<L, K> leftKeyFunction, Stream<R> right, Function<R, K> rightKeyFunction) {
             this.left = left;
