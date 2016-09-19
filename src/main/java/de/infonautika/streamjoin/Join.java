@@ -5,6 +5,7 @@ import de.infonautika.streamjoin.join.JoinWrapper;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class Join {
@@ -235,16 +236,26 @@ public class Join {
             this.rightKeyFunction = rightKeyFunction;
         }
 
-
         public Stream<Y> asStream() {
+            return resultStream();
+        }
+
+        public <C> C collect(Collector<Y, ?, C> collector) {
+            return resultStream().collect(collector);
+        }
+
+        private Stream<Y> resultStream() {
             if ((grouper == null && combiner == null) || (grouper != null && combiner != null)) {
                 throw new IllegalStateException();
             }
 
+            Stream<Y> result;
             if (grouper != null) {
-                return groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
+                result = groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
+            } else {
+                result = groupMany((l, rs) -> rs.map(r -> combiner.apply(l, r)));
             }
-            return groupMany((l, rs) -> rs.map(r -> combiner.apply(l, r)));
+            return result;
         }
 
         protected Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {

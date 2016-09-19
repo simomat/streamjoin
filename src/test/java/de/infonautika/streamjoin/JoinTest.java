@@ -6,7 +6,9 @@ import de.infonautika.streamjoin.repo.Tuple;
 import org.junit.Test;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.infonautika.streamjoin.StreamMatcher.isStreamOf;
@@ -15,6 +17,7 @@ import static de.infonautika.streamjoin.repo.Tuple.tuple;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class JoinTest {
     @Test
@@ -34,6 +37,26 @@ public class JoinTest {
                 Tuple.tuple(engineering, heisenberg),
                 Tuple.tuple(clerical, robinson),
                 Tuple.tuple(clerical, smith))));
+    }
+
+    @Test
+    public void innerJoinWithCombinerAndCollector() throws Exception {
+        List<Tuple<Department, Employee>> joined = Join
+                .join(getDepartments())
+                .withKey(Department::getId)
+                .on(getEmployees())
+                .withKey(Employee::getDepartmentId)
+                .combine(Tuple::tuple)
+                .collect(Collectors.toList());
+
+        //noinspection unchecked
+        assertThat(joined, containsInAnyOrder(
+                Tuple.tuple(sales, rafferty),
+                Tuple.tuple(salesTwo, rafferty),
+                Tuple.tuple(engineering, jones),
+                Tuple.tuple(engineering, heisenberg),
+                Tuple.tuple(clerical, robinson),
+                Tuple.tuple(clerical, smith)));
     }
 
     @Test
