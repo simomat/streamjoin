@@ -3,7 +3,7 @@ package de.infonautika.streamjoin.join;
 import java.util.*;
 import java.util.stream.Stream;
 
-class Clustered<T, K> {
+class Clustered<K, T> {
     private final Map<K, List<T>> map;
     private final List<T> nullKeyElements;
 

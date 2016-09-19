@@ -28,16 +28,20 @@ class ClusteredCollector<T, K> {
     }
 
     private static <T, K> ClusteredCollector<T, K> merge(ClusteredCollector<T, K> receiver, ClusteredCollector<T, K> supplier) {
-        supplier.map.forEach((key, otherCluster) -> receiver.withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
+        supplier.map.forEach((key, otherCluster) ->
+                receiver.withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
         receiver.nullKeyElements.addAll(supplier.nullKeyElements);
         return receiver;
     }
 
     private static <T, K> ClusteredCollector<T, K> copyOf(ClusteredCollector<T, K> collector) {
-        return new ClusteredCollector<>(collector.classifier, new HashMap<>(collector.map), new ArrayList<>(collector.nullKeyElements));
+        return new ClusteredCollector<>(
+                collector.classifier,
+                new HashMap<>(collector.map),
+                new ArrayList<>(collector.nullKeyElements));
     }
 
-    private Clustered<T, K> finish() {
+    private Clustered<K, T> finish() {
         return new Clustered<>(map, nullKeyElements);
     }
 
@@ -53,8 +57,8 @@ class ClusteredCollector<T, K> {
     }
 
 
-    static <T, K> Collector<T, ClusteredCollector<T, K>, Clustered<T, K>> clustered(Function<T, K> rightKeyFunction) {
-        return new Collector<T, ClusteredCollector<T, K>, Clustered<T, K>>() {
+    static <T, K> Collector<T, ClusteredCollector<T, K>, Clustered<K, T>> clustered(Function<T, K> rightKeyFunction) {
+        return new Collector<T, ClusteredCollector<T, K>, Clustered<K, T>>() {
             @Override
             public Supplier<ClusteredCollector<T, K>> supplier() {
                 return () -> new ClusteredCollector<>(rightKeyFunction);
@@ -71,7 +75,7 @@ class ClusteredCollector<T, K> {
             }
 
             @Override
-            public Function<ClusteredCollector<T, K>, Clustered<T, K>> finisher() {
+            public Function<ClusteredCollector<T, K>, Clustered<K, T>> finisher() {
                 return ClusteredCollector::finish;
             }
 

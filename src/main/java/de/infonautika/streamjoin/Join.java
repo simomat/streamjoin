@@ -1,6 +1,6 @@
 package de.infonautika.streamjoin;
 
-import de.infonautika.streamjoin.join.JoinWrapper;
+import de.infonautika.streamjoin.join.Joiner;
 
 import java.util.Objects;
 import java.util.function.BiFunction;
@@ -251,17 +251,15 @@ public class Join {
 
             Stream<Y> result;
             if (grouper != null) {
-                result = groupMany((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
+                result = doJoin((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
             } else {
-                result = groupMany((l, rs) -> rs.map(r -> combiner.apply(l, r)));
+                result = doJoin((l, rs) -> rs.map(r -> combiner.apply(l, r)));
             }
             return result;
         }
 
-        protected Stream<Y> groupMany(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
-            Objects.requireNonNull(groupMany);
-
-            return JoinWrapper.joinWithParameters(
+        protected Stream<Y> doJoin(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+            return Joiner.join(
                     left,
                     leftKeyFunction,
                     right,
