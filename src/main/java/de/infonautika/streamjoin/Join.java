@@ -258,7 +258,7 @@ public class Join {
             return result;
         }
 
-        protected Stream<Y> doJoin(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+        private Stream<Y> doJoin(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
             return Joiner.join(
                     left,
                     leftKeyFunction,

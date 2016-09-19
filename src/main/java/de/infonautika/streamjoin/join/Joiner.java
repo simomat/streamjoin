@@ -54,8 +54,7 @@ public class Joiner {
                         .map(key -> rightCluster.getCluster(key)
                                 .map((StreamToFunction<R, L, K>) cluster -> l -> {
                                     grouper.accept(l, cluster);
-                                    return key;
-                                })
+                                    return key;})
                                 .orElse(leftUnmatched))
                         .orElse(leftUnmatched)
                         .apply(leftElement))
