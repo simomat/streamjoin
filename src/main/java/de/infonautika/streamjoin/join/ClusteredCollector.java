@@ -27,20 +27,9 @@ class ClusteredCollector<K, T> {
         withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
     }
 
-    static <T, K> ClusteredCollector<K, T> combine(ClusteredCollector<K, T> first, ClusteredCollector<K, T> second) {
-        return merge(copyOf(first), second);
-    }
-
-    private static <T, K> ClusteredCollector<K, T> merge(ClusteredCollector<K, T> receiver, ClusteredCollector<K, T> supplier) {
-        supplier.map.forEach((key, otherCluster) ->
-                receiver.withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
-        return receiver;
-    }
-
-    private static <T, K> ClusteredCollector<K, T> copyOf(ClusteredCollector<K, T> collector) {
-        return new ClusteredCollector<>(
-                collector.classifier,
-                new HashMap<>(collector.map));
+    static <T, K> void combine(ClusteredCollector<K, T> target, ClusteredCollector<K, T> source) {
+        source.map.forEach((key, otherCluster) ->
+                target.withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
     }
 
     private void withClusterOf(K key, Consumer<List<T>> consumer) {
