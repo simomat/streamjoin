@@ -20,15 +20,14 @@ public class Joiner {
 
         Clustered<K, R> rightCluster = right.collect(ClusteredCollector.clustered(rightKeyFunction));
 
-        Function<L, ResultPart<K, Y>> leftUnmatched = l ->
-                unmatchedLeft == null ? null : new ResultPart<>(null, Stream.of(unmatchedLeft.apply(l)));
+        Function<L, ResultPart<K, Y>> mangledUnmatchedLeft = mangledUnmatchedLeft(unmatchedLeft);
 
         JoinFinished<K, Y> joinFinished = left
                 .map(leftElement -> Optional.ofNullable(leftKeyFunction.apply(leftElement))
                         .map(key -> rightCluster.getCluster(key)
                                 .map((StreamToLeftToResult<R, L, K, Y>) cluster -> l -> new ResultPart<>(key, grouper.apply(l, cluster)))
-                                .orElse(leftUnmatched))
-                        .orElse(leftUnmatched)
+                                .orElse(mangledUnmatchedLeft))
+                        .orElse(mangledUnmatchedLeft)
                         .apply(leftElement))
                 .filter(result -> result != null)
                 .collect(JoinFinished::new,
@@ -44,6 +43,16 @@ public class Joiner {
                 rightCluster.getMisfits(joinFinished.keys)
                         .map(unmatchedRight));
 
+    }
+
+    private static <K, Y, L> Function<L, ResultPart<K, Y>> mangledUnmatchedLeft(Function<L, Y> unmatchedLeft) {
+        Function<L, ResultPart<K, Y>> mangledUnmatchedLeft;
+        if (unmatchedLeft == null) {
+            mangledUnmatchedLeft = l -> null;
+        } else {
+            mangledUnmatchedLeft = l -> new ResultPart<>(null, Stream.of(unmatchedLeft.apply(l)));
+        }
+        return mangledUnmatchedLeft;
     }
 
     private interface StreamToLeftToResult<R, L, K, Y> extends Function<Stream<R>, Function<L, ResultPart<K, Y>>> {}
