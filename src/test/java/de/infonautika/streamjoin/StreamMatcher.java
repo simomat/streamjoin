@@ -46,15 +46,47 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     @Override
     protected void describeMismatchSafely(Stream<T> item, Description mismatchDescription) {
         assert item == actualStream;
-        describe(mismatchDescription, actualData);
+        mismatchDescription.appendText("stream ");
+        if (describeMissing(mismatchDescription)) {
+            mismatchDescription.appendText("; ");
+        }
+        describeAdditional(mismatchDescription);
+    }
+
+    private void describeAdditional(Description description) {
+        List<T> additional = difference(actualData, data);
+        if (additional.size() > 0) {
+            description.appendText("contains ");
+            describeItems(description, additional);
+        }
+    }
+
+    private boolean describeMissing(Description description) {
+        List<T> missing = difference(data, actualData);
+        if (missing.size() > 0) {
+            description.appendText("does not contain ");
+            describeItems(description, missing);
+            return true;
+        }
+        return false;
+    }
+
+    private List<T> difference(List<T> minuend, List<T> subtrahend) {
+        ArrayList<T> minu = new ArrayList<>(minuend);
+        subtrahend.forEach(s -> minu.remove(s));
+        return minu;
     }
 
     private void describe(Description description, List<T> streamData) {
         description.appendText("stream of [");
+        describeItems(description, streamData);
+        description.appendText("]");
+    }
+
+    private void describeItems(Description description, List<T> streamData) {
         description.appendText(streamData.stream()
                 .map(t -> t == null ? "null" : t.toString())
                 .collect(Collectors.joining(", ")));
-        description.appendText("]");
     }
 
 

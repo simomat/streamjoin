@@ -60,6 +60,22 @@ public class JoinTest {
     }
 
     @Test
+    public void innerJoinWithNullKey() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .join(getDepartments())
+                .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
+                .on(getEmployees())
+                .withKey(e -> e.getName().equals("Jones") ? null : e.getDepartmentId())
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(sales, rafferty),
+                Tuple.tuple(salesTwo, rafferty),
+                Tuple.tuple(engineering, heisenberg)));
+    }
+
+    @Test
     public void innerJoinWithGrouper() throws Exception {
         Stream<Tuple<Department, Set<Employee>>> joined = Join
                 .join(getDepartments())
@@ -93,6 +109,25 @@ public class JoinTest {
                 Tuple.tuple(engineering, heisenberg),
                 Tuple.tuple(clerical, robinson),
                 Tuple.tuple(clerical, smith),
+                Tuple.tuple(marketing, null),
+                Tuple.tuple(storage, null)));
+    }
+
+    @Test
+    public void leftOuterJoinWithNullKey() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .leftOuter(getDepartments())
+                .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
+                .on(getEmployees())
+                .withKey(e -> e.getName().equals("Jones") ? null : e.getDepartmentId())
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(sales, rafferty),
+                Tuple.tuple(salesTwo, rafferty),
+                Tuple.tuple(engineering, heisenberg),
+                Tuple.tuple(clerical, null),
                 Tuple.tuple(marketing, null),
                 Tuple.tuple(storage, null)));
     }
@@ -161,6 +196,30 @@ public class JoinTest {
                 Tuple.tuple(storage, asSet()),
                 Tuple.tuple(Department.sentinel, asSet(williams)),
                 Tuple.tuple(Department.sentinel, asSet(scruffy))));
+    }
+
+    @Test
+    public void fullOuterJoinWithNullKey() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .fullOuter(getDepartments())
+                .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
+                .on(getEmployees())
+                .withKey(e -> e.getName().equals("Jones") ? null : e.getDepartmentId())
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(sales, rafferty),
+                Tuple.tuple(salesTwo, rafferty),
+                Tuple.tuple(null, jones),
+                Tuple.tuple(engineering, heisenberg),
+                Tuple.tuple(null, robinson),
+                Tuple.tuple(null, smith),
+                Tuple.tuple(clerical, null),
+                Tuple.tuple(marketing, null),
+                Tuple.tuple(storage, null),
+                Tuple.tuple(null, williams),
+                Tuple.tuple(null, scruffy)));
     }
 
     private static <T> Set<T> asSet(T... items) {

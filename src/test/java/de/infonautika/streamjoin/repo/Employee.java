@@ -4,11 +4,11 @@ import java.util.Objects;
 
 public class Employee {
     private final Integer departmentId;
-    private final String lastName;
+    private final String name;
 
-    public Employee(Integer departmentId, String lastName) {
+    public Employee(Integer departmentId, String name) {
         this.departmentId = departmentId;
-        this.lastName = lastName;
+        this.name = name;
     }
 
     public Integer getDepartmentId() {
@@ -21,19 +21,23 @@ public class Employee {
         if (o == null || getClass() != o.getClass()) return false;
         Employee employee = (Employee) o;
         return Objects.equals(departmentId, employee.departmentId) &&
-                Objects.equals(lastName, employee.lastName);
+                Objects.equals(name, employee.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(departmentId, lastName);
+        return Objects.hash(departmentId, name);
     }
 
     @Override
     public String toString() {
         return "Employee{" +
-                "departmentId=" + departmentId +
-                ", lastName='" + lastName + '\'' +
+                departmentId +
+                ", " + name +
                 '}';
+    }
+
+    public String getName() {
+        return name;
     }
 }
