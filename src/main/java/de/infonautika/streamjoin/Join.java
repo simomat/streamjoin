@@ -20,11 +20,6 @@ public class Join {
         return new LJLeftSide<>(left);
     }
 
-    public static <L> OJLeftSide<L> fullOuter(Stream<L> left) {
-        Objects.requireNonNull(left);
-        return new OJLeftSide<>(left);
-    }
-
     public static class IJLeftSide<L> {
         private final Stream<L> left;
         private IJLeftSide(Stream<L> left) {
@@ -151,70 +146,6 @@ public class Join {
         }
     }
 
-    /////////////////////
-
-    public static class OJLeftSide<L> {
-        private final Stream<L> left;
-        private OJLeftSide(Stream<L> left) {
-            this.left = left;
-        }
-        public <K> OJLeftKey<L, K> withKey(Function<L, K> leftKeyFunction) {
-            Objects.requireNonNull(leftKeyFunction);
-            return new OJLeftKey<>(leftKeyFunction, this);
-        }
-    }
-
-    public static class OJLeftKey<L, K> {
-        private final OJLeftSide<L> leftSide;
-        private final Function<L, K> leftKeyFunction;
-        private OJLeftKey(Function<L, K> leftKeyFunction, OJLeftSide<L> leftSide) {
-            this.leftKeyFunction = leftKeyFunction;
-            this.leftSide = leftSide;
-        }
-        public <R> OJRightSide<L, R, K> on(Stream<R> right) {
-            Objects.requireNonNull(right);
-            return new OJRightSide<>(right, this);
-        }
-    }
-
-    public static class OJRightSide<L, R, K> {
-        private final Stream<R> right;
-        private final OJLeftKey<L, K> leftKey;
-        private OJRightSide(Stream<R> right, OJLeftKey<L, K> leftKey) {
-            this.right = right;
-            this.leftKey = leftKey;
-        }
-        public OJRightKey<L, R, K> withKey(Function<R, K> rightKeyFunction) {
-            Objects.requireNonNull(rightKeyFunction);
-            return new OJRightKey<>(rightKeyFunction, this);
-        }
-    }
-
-    public static class OJRightKey<L, R, K> {
-        private final Function<R, K> rightKeyFunction;
-        private final OJRightSide<L, R, K> rightSide;
-        private OJRightKey(Function<R, K> rightKeyFunction, OJRightSide<L, R, K> rightSide) {
-            this.rightKeyFunction = rightKeyFunction;
-            this.rightSide = rightSide;
-        }
-
-        public <Y> OJApply<L, R, K, Y> combine(BiFunction<L, R, Y> combiner) {
-            OJApply<L, R, K, Y> apply = createApply();
-            apply.fromCombiner(combiner);
-            return apply;
-        }
-
-        public <Y> OJApply<L, R, K, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            OJApply<L, R, K, Y> apply = createApply();
-            apply.fromGrouper(grouper);
-            return apply;
-        }
-
-        private <Y> OJApply<L, R, K, Y> createApply() {
-            return new OJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction);
-        }
-    }
-
     ////////////////
 
     public static class IJApply<L, R, K, Y> {
@@ -222,7 +153,6 @@ public class Join {
         BiFunction<L, Stream<R>, Y> grouper = null;
 
         Function<L, Y> unmatchedLeft;
-        Function<R, Y> unmatchedRight;
 
         private final Stream<L> left;
         private final Function<L, K> leftKeyFunction;
@@ -265,8 +195,7 @@ public class Join {
                     right,
                     rightKeyFunction,
                     groupMany,
-                    unmatchedLeft,
-                    unmatchedRight);
+                    unmatchedLeft);
         }
 
         void fromGrouper(BiFunction<L, Stream<R>, Y> grouper) {
@@ -302,28 +231,4 @@ public class Join {
         }
     }
 
-    public static class OJApply<L, R, K, Y> extends LJApply<L, R, K, Y> {
-        public OJApply(Stream<L> left, Function<L, K> leftKeyFunction, Stream<R> right, Function<R, K> rightKeyFunction) {
-            super(left, leftKeyFunction, right, rightKeyFunction);
-            unmatchedRight = r -> grouper.apply(null, Stream.of(r));
-        }
-
-        public OJApply<L, R, K, Y> withRightUnmatched(Function<R, Y> unmatchedRight) {
-            this.unmatchedRight = unmatchedRight;
-            return this;
-        }
-
-        @Override
-        void fromGrouper(BiFunction<L, Stream<R>, Y> grouper) {
-            super.fromGrouper(grouper);
-            unmatchedRight = r -> grouper.apply(null, Stream.of(r));
-        }
-
-
-        @Override
-        public void fromCombiner(BiFunction<L, R, Y> combiner) {
-            super.fromCombiner(combiner);
-            unmatchedRight = r -> combiner.apply(null, r);
-        }
-    }
 }

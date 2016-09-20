@@ -73,7 +73,7 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
 
     private List<T> difference(List<T> minuend, List<T> subtrahend) {
         ArrayList<T> minu = new ArrayList<>(minuend);
-        subtrahend.forEach(s -> minu.remove(s));
+        subtrahend.forEach(minu::remove);
         return minu;
     }
 
