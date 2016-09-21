@@ -25,59 +25,59 @@ public class Join {
         private IJLeftSide(Stream<L> left) {
             this.left = left;
         }
-        public <K> IJLeftKey<L, K> withKey(Function<L, K> leftKeyFunction) {
+        public <KL> IJLeftKey<L, KL> withKey(Function<L, KL> leftKeyFunction) {
             Objects.requireNonNull(leftKeyFunction);
             return new IJLeftKey<>(leftKeyFunction, this);
         }
     }
 
-    public static class IJLeftKey<L, K> {
+    public static class IJLeftKey<L, KL> {
         private final IJLeftSide<L> leftSide;
-        private final Function<L, K> leftKeyFunction;
-        private IJLeftKey(Function<L, K> leftKeyFunction, IJLeftSide<L> leftSide) {
+        private final Function<L, KL> leftKeyFunction;
+        private IJLeftKey(Function<L, KL> leftKeyFunction, IJLeftSide<L> leftSide) {
             this.leftKeyFunction = leftKeyFunction;
             this.leftSide = leftSide;
         }
-        public <R> IJRightSide<L, R, K> on(Stream<R> right) {
+        public <R> IJRightSide<L, R, KL> on(Stream<R> right) {
             Objects.requireNonNull(right);
             return new IJRightSide<>(right, this);
         }
     }
 
-    public static class IJRightSide<L, R, K> {
+    public static class IJRightSide<L, R, KL> {
         private final Stream<R> right;
-        private final IJLeftKey<L, K> leftKey;
-        private IJRightSide(Stream<R> right, IJLeftKey<L, K> leftKey) {
+        private final IJLeftKey<L, KL> leftKey;
+        private IJRightSide(Stream<R> right, IJLeftKey<L, KL> leftKey) {
             this.right = right;
             this.leftKey = leftKey;
         }
-        public IJRightKey<L, R, K> withKey(Function<R, K> rightKeyFunction) {
+        public <KR> IJRightKey<L, R, KL, KR> withKey(Function<R, KR> rightKeyFunction) {
             Objects.requireNonNull(rightKeyFunction);
             return new IJRightKey<>(rightKeyFunction, this);
         }
     }
 
-    public static class IJRightKey<L, R, K> {
-        private final Function<R, K> rightKeyFunction;
-        private final IJRightSide<L, R, K> rightSide;
-        private IJRightKey(Function<R, K> rightKeyFunction, IJRightSide<L, R, K> rightSide) {
+    public static class IJRightKey<L, R, KL, KR> {
+        private final Function<R, KR> rightKeyFunction;
+        private final IJRightSide<L, R, KL> rightSide;
+        private IJRightKey(Function<R, KR> rightKeyFunction, IJRightSide<L, R, KL> rightSide) {
             this.rightKeyFunction = rightKeyFunction;
             this.rightSide = rightSide;
         }
 
-        public <Y> IJApply<L, R, K, Y> combine(BiFunction<L, R, Y> combiner) {
-            IJApply<L, R, K, Y> apply = createApply();
+        public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
+            IJApply<L, R, KL, KR, Y> apply = createApply();
             apply.fromCombiner(combiner);
             return apply;
         }
 
-        public <Y> IJApply<L, R, K, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            IJApply<L, R, K, Y> apply = createApply();
+        public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+            IJApply<L, R, KL, KR, Y> apply = createApply();
             apply.fromGrouper(grouper);
             return apply;
         }
 
-        private <Y> IJApply<L, R, K, Y> createApply() {
+        private <Y> IJApply<L, R, KL, KR, Y> createApply() {
             return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction);
         }
     }
@@ -95,71 +95,71 @@ public class Join {
         }
     }
 
-    public static class LJLeftKey<L, K> {
+    public static class LJLeftKey<L, KL> {
         private final LJLeftSide<L> leftSide;
-        private final Function<L, K> leftKeyFunction;
-        private LJLeftKey(Function<L, K> leftKeyFunction, LJLeftSide<L> leftSide) {
+        private final Function<L, KL> leftKeyFunction;
+        private LJLeftKey(Function<L, KL> leftKeyFunction, LJLeftSide<L> leftSide) {
             this.leftKeyFunction = leftKeyFunction;
             this.leftSide = leftSide;
         }
-        public <R> LJRightSide<L, R, K> on(Stream<R> right) {
+        public <R> LJRightSide<L, R, KL> on(Stream<R> right) {
             Objects.requireNonNull(right);
             return new LJRightSide<>(right, this);
         }
     }
 
-    public static class LJRightSide<L, R, K> {
+    public static class LJRightSide<L, R, KL> {
         private final Stream<R> right;
-        private final LJLeftKey<L, K> leftKey;
-        private LJRightSide(Stream<R> right, LJLeftKey<L, K> leftKey) {
+        private final LJLeftKey<L, KL> leftKey;
+        private LJRightSide(Stream<R> right, LJLeftKey<L, KL> leftKey) {
             this.right = right;
             this.leftKey = leftKey;
         }
-        public LJRightKey<L, R, K> withKey(Function<R, K> rightKeyFunction) {
+        public <KR> LJRightKey<L, R, KL, KR> withKey(Function<R, KR> rightKeyFunction) {
             Objects.requireNonNull(rightKeyFunction);
             return new LJRightKey<>(rightKeyFunction, this);
         }
     }
 
-    public static class LJRightKey<L, R, K> {
-        private final Function<R, K> rightKeyFunction;
-        private final LJRightSide<L, R, K> rightSide;
-        private LJRightKey(Function<R, K> rightKeyFunction, LJRightSide<L, R, K> rightSide) {
+    public static class LJRightKey<L, R, KL, KR> {
+        private final Function<R, KR> rightKeyFunction;
+        private final LJRightSide<L, R, KL> rightSide;
+        private LJRightKey(Function<R, KR> rightKeyFunction, LJRightSide<L, R, KL> rightSide) {
             this.rightKeyFunction = rightKeyFunction;
             this.rightSide = rightSide;
         }
 
-        public <Y> LJApply<L, R, K, Y> combine(BiFunction<L, R, Y> combiner) {
-            LJApply<L, R, K, Y> apply = createApply();
+        public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
+            LJApply<L, R, KL, KR, Y> apply = createApply();
             apply.fromCombiner(combiner);
             return apply;
         }
 
-        public <Y> LJApply<L, R, K, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            LJApply<L, R, K, Y> apply = createApply();
+        public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+            LJApply<L, R, KL, KR, Y> apply = createApply();
             apply.fromGrouper(grouper);
             return apply;
         }
 
-        private <Y> LJApply<L, R, K, Y> createApply() {
+        private <Y> LJApply<L, R, KL, KR, Y> createApply() {
             return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction);
         }
     }
 
     ////////////////
 
-    public static class IJApply<L, R, K, Y> {
+    public static class IJApply<L, R, KL, KR, Y> {
         BiFunction<L, R, Y> combiner = null;
         BiFunction<L, Stream<R>, Y> grouper = null;
 
         Function<L, Y> unmatchedLeft;
 
         private final Stream<L> left;
-        private final Function<L, K> leftKeyFunction;
+        private final Function<L, KL> leftKeyFunction;
         private final Stream<R> right;
-        private final Function<R, K> rightKeyFunction;
+        private final Function<R, KR> rightKeyFunction;
 
-        public IJApply(Stream<L> left, Function<L, K> leftKeyFunction, Stream<R> right, Function<R, K> rightKeyFunction) {
+        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction) {
             this.left = left;
             this.leftKeyFunction = leftKeyFunction;
             this.right = right;
@@ -207,13 +207,13 @@ public class Join {
         }
     }
 
-    public static class LJApply<L, R, K, Y> extends IJApply<L, R, K, Y> {
-        public LJApply(Stream<L> left, Function<L, K> leftKeyFunction, Stream<R> right, Function<R, K> rightKeyFunction) {
+    public static class LJApply<L, R, KL, KR, Y> extends IJApply<L, R, KL, KR, Y> {
+        public LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction) {
             super(left, leftKeyFunction, right, rightKeyFunction);
             unmatchedLeft = l -> combiner.apply(l, null);
         }
 
-        public LJApply<L, R, K, Y> withLeftUnmatched(Function<L, Y> unmatchedLeft) {
+        public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<L, Y> unmatchedLeft) {
             this.unmatchedLeft = unmatchedLeft;
             return this;
         }

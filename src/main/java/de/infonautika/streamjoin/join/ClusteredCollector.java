@@ -18,7 +18,7 @@ class ClusteredCollector<K, T> {
         this.map = map;
     }
 
-    Optional<Stream<T>> getCluster(K key) {
+    Optional<Stream<T>> getCluster(Object key) {
         return Optional.ofNullable(map.get(key))
                 .map(Collection::stream);
     }

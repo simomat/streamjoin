@@ -7,15 +7,15 @@ import java.util.stream.Stream;
 
 public class Joiner {
 
-    public static <K, Y, L, R> Stream<Y> join(
+    public static <L, R, KL, KR, Y> Stream<Y> join(
             Stream<L> left,
-            Function<L, K> leftKeyFunction,
+            Function<L, KL> leftKeyFunction,
             Stream<R> right,
-            Function<R, K> rightKeyFunction,
+            Function<R, KR> rightKeyFunction,
             BiFunction<L, Stream<R>, Stream<Y>> grouper,
             Function<L, Y> unmatchedLeft) {
 
-        ClusteredCollector<K, R> rightCluster = right.collect(
+        ClusteredCollector<KR, R> rightCluster = right.collect(
                 () -> new ClusteredCollector<>(rightKeyFunction),
                 ClusteredCollector::accept,
                 ClusteredCollector::combine);
