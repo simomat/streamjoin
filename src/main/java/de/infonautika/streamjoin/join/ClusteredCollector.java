@@ -27,9 +27,9 @@ class ClusteredCollector<K, T> {
         withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
     }
 
-    static <T, K> void combine(ClusteredCollector<K, T> target, ClusteredCollector<K, T> source) {
+    void combine(ClusteredCollector<K, T> source) {
         source.map.forEach((key, otherCluster) ->
-                target.withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
+                withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
     }
 
     private void withClusterOf(K key, Consumer<List<T>> consumer) {
