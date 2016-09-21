@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 
 public class Join {
 
-    public static <L> IJLeftSide<L> join(Stream<L> left) {
+    public static <L> IJLeftSide<L> join(Stream<? extends L> left) {
         Objects.requireNonNull(left);
         return new IJLeftSide<>(left);
     }
@@ -21,11 +21,11 @@ public class Join {
     }
 
     public static class IJLeftSide<L> {
-        private final Stream<L> left;
-        private IJLeftSide(Stream<L> left) {
+        private final Stream<? extends L> left;
+        private IJLeftSide(Stream<? extends L> left) {
             this.left = left;
         }
-        public <KL> IJLeftKey<L, KL> withKey(Function<L, KL> leftKeyFunction) {
+        public <KL> IJLeftKey<L, KL> withKey(Function<? super L, KL> leftKeyFunction) {
             Objects.requireNonNull(leftKeyFunction);
             return new IJLeftKey<>(leftKeyFunction, this);
         }
@@ -33,43 +33,43 @@ public class Join {
 
     public static class IJLeftKey<L, KL> {
         private final IJLeftSide<L> leftSide;
-        private final Function<L, KL> leftKeyFunction;
-        private IJLeftKey(Function<L, KL> leftKeyFunction, IJLeftSide<L> leftSide) {
+        private final Function<? super L, KL> leftKeyFunction;
+        private IJLeftKey(Function<? super L, KL> leftKeyFunction, IJLeftSide<L> leftSide) {
             this.leftKeyFunction = leftKeyFunction;
             this.leftSide = leftSide;
         }
-        public <R> IJRightSide<L, R, KL> on(Stream<R> right) {
+        public <R> IJRightSide<L, R, KL> on(Stream<? extends R> right) {
             Objects.requireNonNull(right);
             return new IJRightSide<>(right, this);
         }
     }
 
     public static class IJRightSide<L, R, KL> {
-        private final Stream<R> right;
+        private final Stream<? extends R> right;
         private final IJLeftKey<L, KL> leftKey;
-        private IJRightSide(Stream<R> right, IJLeftKey<L, KL> leftKey) {
+        private IJRightSide(Stream<? extends R> right, IJLeftKey<L, KL> leftKey) {
             this.right = right;
             this.leftKey = leftKey;
         }
-        public <KR> IJRightKey<L, R, KL, KR> withKey(Function<R, KR> rightKeyFunction) {
+        public <KR> IJRightKey<L, R, KL, KR> withKey(Function<? super R, KR> rightKeyFunction) {
             Objects.requireNonNull(rightKeyFunction);
             return new IJRightKey<>(rightKeyFunction, this);
         }
     }
 
     public static class IJRightKey<L, R, KL, KR> {
-        private final Function<R, KR> rightKeyFunction;
+        private final Function<? super R, KR> rightKeyFunction;
         private final IJRightSide<L, R, KL> rightSide;
-        private IJRightKey(Function<R, KR> rightKeyFunction, IJRightSide<L, R, KL> rightSide) {
+        private IJRightKey(Function<? super R, KR> rightKeyFunction, IJRightSide<L, R, KL> rightSide) {
             this.rightKeyFunction = rightKeyFunction;
             this.rightSide = rightSide;
         }
 
-        public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
+        public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
             return createApplyWithCombiner(combinerToGroupMany(combiner));
         }
 
-        public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+        public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
             return createApplyWithCombiner(grouperToGroupMany(grouper));
         }
 
@@ -125,11 +125,11 @@ public class Join {
             this.rightSide = rightSide;
         }
 
-        public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
+        public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
             return createApplyWithCombiner(combinerToGroupMany(combiner), toUnmatchedLeft(combiner));
         }
 
-        public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
+        public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
             return createApplyWithCombiner(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
         }
 
@@ -141,18 +141,18 @@ public class Join {
     ////////////////
 
     public static class IJApply<L, R, KL, KR, Y> {
-        private final Stream<L> left;
-        private final Function<L, KL> leftKeyFunction;
-        private final Stream<R> right;
-        private final Function<R, KR> rightKeyFunction;
+        private final Stream<? extends L> left;
+        private final Function<? super L, KL> leftKeyFunction;
+        private final Stream<? extends R> right;
+        private final Function<? super R, KR> rightKeyFunction;
         private BiFunction<L, Stream<R>, Stream<Y>> groupMany;
-        protected Function<L, Y> unmatchedLeft;
+        protected Function<? super L, ? extends Y> unmatchedLeft;
 
-        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+        public IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
             this(left, leftKeyFunction, right, rightKeyFunction, groupMany, null);
         }
 
-        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+        public IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             this.left = left;
             this.leftKeyFunction = leftKeyFunction;
             this.right = right;
@@ -186,21 +186,21 @@ public class Join {
             super(left, leftKeyFunction, right, rightKeyFunction, groupMany, unmatchedLeft);
         }
 
-        public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<L, Y> unmatchedLeft) {
+        public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<? super L, ? extends Y> unmatchedLeft) {
             this.unmatchedLeft = unmatchedLeft;
             return this;
         }
     }
 
-    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> combinerToGroupMany(BiFunction<L, R, Y> combiner) {
+    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> combinerToGroupMany(BiFunction<? super L, ? super R, Y> combiner) {
         return (l, rs) -> rs.map(r -> combiner.apply(l, r));
     }
 
-    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> grouperToGroupMany(BiFunction<L, Stream<R>, Y> grouper) {
+    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> grouperToGroupMany(BiFunction<? super L, Stream<R>, Y> grouper) {
         return (left, rightStream) -> Stream.of(grouper.apply(left, rightStream));
     }
 
-    private static <L, Y> Function<L, Y> toUnmatchedLeft(BiFunction<L, ?, Y> resultHandler) {
+    private static <L, Y> Function<L, Y> toUnmatchedLeft(BiFunction<? super L, ?, Y> resultHandler) {
         return l -> resultHandler.apply(l, null);
     }
 

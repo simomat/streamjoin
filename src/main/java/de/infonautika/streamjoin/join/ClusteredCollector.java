@@ -6,14 +6,14 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 class ClusteredCollector<K, T> {
-    private final Function<T, K> classifier;
+    private final Function<? super T, K> classifier;
     private final Map<K, List<T>> map;
 
-    ClusteredCollector(Function<T, K> classifier) {
+    ClusteredCollector(Function<? super T, K> classifier) {
         this(classifier, new HashMap<>());
     }
 
-    private ClusteredCollector(Function<T, K> classifier, HashMap<K, List<T>> map) {
+    private ClusteredCollector(Function<? super T, K> classifier, HashMap<K, List<T>> map) {
         this.classifier = classifier;
         this.map = map;
     }

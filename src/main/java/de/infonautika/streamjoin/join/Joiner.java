@@ -8,12 +8,12 @@ import java.util.stream.Stream;
 public class Joiner {
 
     public static <L, R, KL, KR, Y> Stream<Y> join(
-            Stream<L> left,
-            Function<L, KL> leftKeyFunction,
-            Stream<R> right,
-            Function<R, KR> rightKeyFunction,
+            Stream<? extends L> left,
+            Function<? super L, KL> leftKeyFunction,
+            Stream<? extends R> right,
+            Function<? super R, KR> rightKeyFunction,
             BiFunction<L, Stream<R>, Stream<Y>> grouper,
-            Function<L, Y> unmatchedLeft) {
+            Function<? super L, ? extends Y> unmatchedLeft) {
 
         ClusteredCollector<KR, R> rightCluster = right.collect(
                 () -> new ClusteredCollector<>(rightKeyFunction),
@@ -33,7 +33,7 @@ public class Joiner {
                 .flatMap(Function.identity());
     }
 
-    private static <Y, L> Function<L, Stream<Y>> mangledUnmatchedLeft(Function<L, Y> unmatchedLeft) {
+    private static <Y, L> Function<L, Stream<Y>> mangledUnmatchedLeft(Function<? super L, ? extends Y> unmatchedLeft) {
         if (unmatchedLeft == null) {
             return l -> null;
         }

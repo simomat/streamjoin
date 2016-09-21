@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.StreamMatcher.isEmptyStream;
 import static de.infonautika.streamjoin.StreamMatcher.isStreamOf;
 import static de.infonautika.streamjoin.repo.TestRepository.*;
 import static de.infonautika.streamjoin.repo.Tuple.tuple;
@@ -152,7 +153,39 @@ public class JoinTest {
                 Tuple.tuple(storage, asSet())));
     }
 
+    @Test
+    public void emptyLeftYieldsEmptyStream() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .join(Stream.<Department>empty())
+                .withKey(Department::getId)
+                .on(getEmployees())
+                .withKey(Employee::getDepartmentId)
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isEmptyStream());
+    }
+
+    @Test
+    public void emptyRightYieldsEmptyStream() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .join(getDepartments())
+                .withKey(Department::getId)
+                .on(Stream.<Employee>empty())
+                .withKey(Employee::getDepartmentId)
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isEmptyStream());
+    }
+
     private static <T> Set<T> asSet(T... items) {
         return new HashSet<>(asList(items));
     }
+
+
+
+
+
+
 }
