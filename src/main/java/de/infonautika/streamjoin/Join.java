@@ -66,19 +66,15 @@ public class Join {
         }
 
         public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
-            IJApply<L, R, KL, KR, Y> apply = createApply();
-            apply.fromCombiner(combiner);
-            return apply;
+            return createApplyWithCombiner(combinerToGroupMany(combiner));
         }
 
         public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            IJApply<L, R, KL, KR, Y> apply = createApply();
-            apply.fromGrouper(grouper);
-            return apply;
+            return createApplyWithCombiner(grouperToGroupMany(grouper));
         }
 
-        private <Y> IJApply<L, R, KL, KR, Y> createApply() {
-            return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction);
+        private <Y> IJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+            return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, groupMany);
         }
     }
 
@@ -130,40 +126,39 @@ public class Join {
         }
 
         public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<L, R, Y> combiner) {
-            LJApply<L, R, KL, KR, Y> apply = createApply();
-            apply.fromCombiner(combiner);
-            return apply;
+            return createApplyWithCombiner(combinerToGroupMany(combiner), toUnmatchedLeft(combiner));
         }
 
         public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<L, Stream<R>, Y> grouper) {
-            LJApply<L, R, KL, KR, Y> apply = createApply();
-            apply.fromGrouper(grouper);
-            return apply;
+            return createApplyWithCombiner(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
         }
 
-        private <Y> LJApply<L, R, KL, KR, Y> createApply() {
-            return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction);
+        private <Y> LJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+            return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, groupMany, unmatchedLeft);
         }
     }
 
     ////////////////
 
     public static class IJApply<L, R, KL, KR, Y> {
-        BiFunction<L, R, Y> combiner = null;
-        BiFunction<L, Stream<R>, Y> grouper = null;
-
-        Function<L, Y> unmatchedLeft;
-
         private final Stream<L> left;
         private final Function<L, KL> leftKeyFunction;
         private final Stream<R> right;
         private final Function<R, KR> rightKeyFunction;
+        private BiFunction<L, Stream<R>, Stream<Y>> groupMany;
+        protected Function<L, Y> unmatchedLeft;
 
-        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction) {
+        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+            this(left, leftKeyFunction, right, rightKeyFunction, groupMany, null);
+        }
+
+        public IJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             this.left = left;
             this.leftKeyFunction = leftKeyFunction;
             this.right = right;
             this.rightKeyFunction = rightKeyFunction;
+            this.groupMany = groupMany;
+            this.unmatchedLeft = unmatchedLeft;
         }
 
         public Stream<Y> asStream() {
@@ -175,20 +170,6 @@ public class Join {
         }
 
         private Stream<Y> resultStream() {
-            if ((grouper == null && combiner == null) || (grouper != null && combiner != null)) {
-                throw new IllegalStateException();
-            }
-
-            Stream<Y> result;
-            if (grouper != null) {
-                result = doJoin((left, rightStream) -> Stream.of(grouper.apply(left, rightStream)));
-            } else {
-                result = doJoin((l, rs) -> rs.map(r -> combiner.apply(l, r)));
-            }
-            return result;
-        }
-
-        private Stream<Y> doJoin(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
             return Joiner.join(
                     left,
                     leftKeyFunction,
@@ -197,38 +178,30 @@ public class Join {
                     groupMany,
                     unmatchedLeft);
         }
-
-        void fromGrouper(BiFunction<L, Stream<R>, Y> grouper) {
-            this.grouper = grouper;
-        }
-
-        public void fromCombiner(BiFunction<L, R, Y> combiner) {
-            this.combiner = combiner;
-        }
     }
 
     public static class LJApply<L, R, KL, KR, Y> extends IJApply<L, R, KL, KR, Y> {
-        public LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction) {
-            super(left, leftKeyFunction, right, rightKeyFunction);
-            unmatchedLeft = l -> combiner.apply(l, null);
+
+        public LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+            super(left, leftKeyFunction, right, rightKeyFunction, groupMany, unmatchedLeft);
         }
 
         public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<L, Y> unmatchedLeft) {
             this.unmatchedLeft = unmatchedLeft;
             return this;
         }
+    }
 
-        @Override
-        void fromGrouper(BiFunction<L, Stream<R>, Y> grouper) {
-            super.fromGrouper(grouper);
-            unmatchedLeft = l -> grouper.apply(l, null);
-        }
+    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> combinerToGroupMany(BiFunction<L, R, Y> combiner) {
+        return (l, rs) -> rs.map(r -> combiner.apply(l, r));
+    }
 
-        @Override
-        public void fromCombiner(BiFunction<L, R, Y> combiner) {
-            super.fromCombiner(combiner);
-            unmatchedLeft = l -> combiner.apply(l, null);
-        }
+    private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> grouperToGroupMany(BiFunction<L, Stream<R>, Y> grouper) {
+        return (left, rightStream) -> Stream.of(grouper.apply(left, rightStream));
+    }
+
+    private static <L, Y> Function<L, Y> toUnmatchedLeft(BiFunction<L, ?, Y> resultHandler) {
+        return l -> resultHandler.apply(l, null);
     }
 
 }
