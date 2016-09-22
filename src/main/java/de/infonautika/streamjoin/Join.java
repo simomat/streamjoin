@@ -2,21 +2,19 @@ package de.infonautika.streamjoin;
 
 import de.infonautika.streamjoin.join.Joiner;
 
-import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collector;
 import java.util.stream.Stream;
 
 public class Join {
 
     public static <L> IJLeftSide<L> join(Stream<? extends L> left) {
-        Objects.requireNonNull(left);
+        checkNotNull(left, "left must not be null");
         return new IJLeftSide<>(left);
     }
 
     public static <L> LJLeftSide<L> leftOuter(Stream<L> left) {
-        Objects.requireNonNull(left);
+        checkNotNull(left, "left must not be null");
         return new LJLeftSide<>(left);
     }
 
@@ -26,7 +24,7 @@ public class Join {
             this.left = left;
         }
         public <KL> IJLeftKey<L, KL> withKey(Function<? super L, KL> leftKeyFunction) {
-            Objects.requireNonNull(leftKeyFunction);
+            checkNotNull(left, "leftKeyFunction must not be null");
             return new IJLeftKey<>(leftKeyFunction, this);
         }
     }
@@ -39,7 +37,7 @@ public class Join {
             this.leftSide = leftSide;
         }
         public <R> IJRightSide<L, R, KL> on(Stream<? extends R> right) {
-            Objects.requireNonNull(right);
+            checkNotNull(right, "right must not be null");
             return new IJRightSide<>(right, this);
         }
     }
@@ -52,7 +50,7 @@ public class Join {
             this.leftKey = leftKey;
         }
         public <KR> IJRightKey<L, R, KL, KR> withKey(Function<? super R, KR> rightKeyFunction) {
-            Objects.requireNonNull(rightKeyFunction);
+            checkNotNull(rightKeyFunction, "rightKeyFunction must not be null");
             return new IJRightKey<>(rightKeyFunction, this);
         }
     }
@@ -66,10 +64,12 @@ public class Join {
         }
 
         public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
+            checkNotNull(combiner, "combiner must not be null");
             return createApplyWithCombiner(combinerToGroupMany(combiner));
         }
 
         public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
+            checkNotNull(grouper, "grouper must not be null");
             return createApplyWithCombiner(grouperToGroupMany(grouper));
         }
 
@@ -78,15 +78,13 @@ public class Join {
         }
     }
 
-    ///////////////////
-
     public static class LJLeftSide<L> {
         private final Stream<L> left;
         private LJLeftSide(Stream<L> left) {
             this.left = left;
         }
         public <K> LJLeftKey<L, K> withKey(Function<L, K> leftKeyFunction) {
-            Objects.requireNonNull(leftKeyFunction);
+            checkNotNull(leftKeyFunction, "leftKeyFunction must not be null");
             return new LJLeftKey<>(leftKeyFunction, this);
         }
     }
@@ -99,7 +97,7 @@ public class Join {
             this.leftSide = leftSide;
         }
         public <R> LJRightSide<L, R, KL> on(Stream<R> right) {
-            Objects.requireNonNull(right);
+            checkNotNull(right, "right must not be null");
             return new LJRightSide<>(right, this);
         }
     }
@@ -112,7 +110,7 @@ public class Join {
             this.leftKey = leftKey;
         }
         public <KR> LJRightKey<L, R, KL, KR> withKey(Function<R, KR> rightKeyFunction) {
-            Objects.requireNonNull(rightKeyFunction);
+            checkNotNull(rightKeyFunction, "rightKeyFunction must not be null");
             return new LJRightKey<>(rightKeyFunction, this);
         }
     }
@@ -126,10 +124,12 @@ public class Join {
         }
 
         public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
+            checkNotNull(combiner, "combiner must not be null");
             return createApplyWithCombiner(combinerToGroupMany(combiner), toUnmatchedLeft(combiner));
         }
 
         public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
+            checkNotNull(grouper, "grouper must not be null");
             return createApplyWithCombiner(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
         }
 
@@ -138,21 +138,19 @@ public class Join {
         }
     }
 
-    ////////////////
-
     public static class IJApply<L, R, KL, KR, Y> {
         private final Stream<? extends L> left;
         private final Function<? super L, KL> leftKeyFunction;
         private final Stream<? extends R> right;
         private final Function<? super R, KR> rightKeyFunction;
         private BiFunction<L, Stream<R>, Stream<Y>> groupMany;
-        protected Function<? super L, ? extends Y> unmatchedLeft;
+        Function<? super L, ? extends Y> unmatchedLeft;
 
-        public IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+        private IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
             this(left, leftKeyFunction, right, rightKeyFunction, groupMany, null);
         }
 
-        public IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+        IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             this.left = left;
             this.leftKeyFunction = leftKeyFunction;
             this.right = right;
@@ -162,14 +160,6 @@ public class Join {
         }
 
         public Stream<Y> asStream() {
-            return resultStream();
-        }
-
-        public <C> C collect(Collector<Y, ?, C> collector) {
-            return resultStream().collect(collector);
-        }
-
-        private Stream<Y> resultStream() {
             return Joiner.join(
                     left,
                     leftKeyFunction,
@@ -182,11 +172,12 @@ public class Join {
 
     public static class LJApply<L, R, KL, KR, Y> extends IJApply<L, R, KL, KR, Y> {
 
-        public LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+        private LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             super(left, leftKeyFunction, right, rightKeyFunction, groupMany, unmatchedLeft);
         }
 
         public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<? super L, ? extends Y> unmatchedLeft) {
+            checkNotNull(unmatchedLeft, "unmatchedLeft must not be null");
             this.unmatchedLeft = unmatchedLeft;
             return this;
         }
@@ -204,4 +195,9 @@ public class Join {
         return l -> resultHandler.apply(l, null);
     }
 
+    private static void checkNotNull(Object object, String message) {
+        if (object == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
 }
