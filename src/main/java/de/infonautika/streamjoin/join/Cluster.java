@@ -5,15 +5,15 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-class ClusteredCollector<K, T> {
+class Cluster<K, T> {
     private final Function<? super T, K> classifier;
     private final Map<K, List<T>> map;
 
-    ClusteredCollector(Function<? super T, K> classifier) {
+    Cluster(Function<? super T, K> classifier) {
         this(classifier, new HashMap<>());
     }
 
-    private ClusteredCollector(Function<? super T, K> classifier, HashMap<K, List<T>> map) {
+    private Cluster(Function<? super T, K> classifier, HashMap<K, List<T>> map) {
         this.classifier = classifier;
         this.map = map;
     }
@@ -27,7 +27,7 @@ class ClusteredCollector<K, T> {
         withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
     }
 
-    void combine(ClusteredCollector<K, T> source) {
+    void combine(Cluster<K, T> source) {
         source.map.forEach((key, otherCluster) ->
                 withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
     }

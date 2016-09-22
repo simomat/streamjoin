@@ -15,10 +15,7 @@ public class Joiner {
             BiFunction<L, Stream<R>, Stream<Y>> grouper,
             Function<? super L, ? extends Y> unmatchedLeft) {
 
-        ClusteredCollector<KR, R> rightCluster = right.collect(
-                () -> new ClusteredCollector<>(rightKeyFunction),
-                ClusteredCollector::accept,
-                ClusteredCollector::combine);
+        Cluster<KR, R> rightCluster = createCluster(right, rightKeyFunction);
 
         Function<L, Stream<Y>> mangledUnmatchedLeft = mangledUnmatchedLeft(unmatchedLeft);
 
@@ -31,6 +28,13 @@ public class Joiner {
                         .apply(leftElement))
                 .filter(result -> result != null)
                 .flatMap(Function.identity());
+    }
+
+    private static <R, KR> Cluster<KR, R> createCluster(Stream<? extends R> right, Function<? super R, KR> rightKeyFunction) {
+        return right.collect(
+                    () -> new Cluster<>(rightKeyFunction),
+                    Cluster::accept,
+                    Cluster::combine);
     }
 
     private static <Y, L> Function<L, Stream<Y>> mangledUnmatchedLeft(Function<? super L, ? extends Y> unmatchedLeft) {
