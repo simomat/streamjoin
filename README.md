@@ -25,8 +25,8 @@ Key functions which return `null` for one or many objects are tollerated, but wi
 
 #### Join Types
 
-- inner join as shown with `Join.join(...)`
-- left outer joins with `Join.leftJoin(...)`.
+- [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) as shown with `Join.join(...)`
+- [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftJoin(...)`.
 Unmatching objects of the left side (i.e. the first stream given) are respected. By default, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with 
 ```java
     .combine((left, right) -> something(left, right))
@@ -53,7 +53,7 @@ Hence, if huge streams are joined and memory efficiency matters, using the 'shor
 
 
 #### Ideas for next steps
-- [ ] add non-equi join (like 'WHERE A.RANK < B.RANK')
+- [ ] add non-equi join (like `WHERE A.RANK < B.RANK`)
 - [x] return a result without 'consume' the left side stream with a terminal operation
 - [x] make generic types less restrictive with bounded wildcards
 
