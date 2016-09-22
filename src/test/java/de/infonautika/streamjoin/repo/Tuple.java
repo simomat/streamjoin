@@ -33,8 +33,8 @@ public class Tuple<A, B> {
     @Override
     public String toString() {
         return "Tuple{" +
-                "first=" + first +
-                ", second=" + second +
+                first +
+                ", " + second +
                 '}';
     }
 }

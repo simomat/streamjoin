@@ -6,18 +6,16 @@ import de.infonautika.streamjoin.repo.Tuple;
 import org.junit.Test;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.StreamMatcher.isEmptyStream;
 import static de.infonautika.streamjoin.StreamMatcher.isStreamOf;
 import static de.infonautika.streamjoin.repo.TestRepository.*;
 import static de.infonautika.streamjoin.repo.Tuple.tuple;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toSet;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 
 @SuppressWarnings("unchecked")
 public class JoinTest {
@@ -41,22 +39,19 @@ public class JoinTest {
     }
 
     @Test
-    public void innerJoinWithCombinerAndCollector() throws Exception {
-        List<Tuple<Department, Employee>> joined = Join
+    public void innerJoinWithNullKey() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
                 .join(getDepartments())
-                .withKey(Department::getId)
+                .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
                 .on(getEmployees())
-                .withKey(Employee::getDepartmentId)
+                .withKey(e -> e.getName().equals("Jones") ? null : e.getDepartmentId())
                 .combine(Tuple::tuple)
-                .collect(Collectors.toList());
+                .asStream();
 
-        assertThat(joined, containsInAnyOrder(
+        assertThat(joined, isStreamOf(
                 Tuple.tuple(sales, rafferty),
                 Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, jones),
-                Tuple.tuple(engineering, heisenberg),
-                Tuple.tuple(clerical, robinson),
-                Tuple.tuple(clerical, smith)));
+                Tuple.tuple(engineering, heisenberg)));
     }
 
     @Test
@@ -98,6 +93,25 @@ public class JoinTest {
     }
 
     @Test
+    public void leftOuterJoinWithNullKey() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .leftOuter(getDepartments())
+                .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
+                .on(getEmployees())
+                .withKey(e -> e.getName().equals("Jones") ? null : e.getDepartmentId())
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(sales, rafferty),
+                Tuple.tuple(salesTwo, rafferty),
+                Tuple.tuple(engineering, heisenberg),
+                Tuple.tuple(clerical, null),
+                Tuple.tuple(marketing, null),
+                Tuple.tuple(storage, null)));
+    }
+
+    @Test
     public void leftOuterJoinWithGrouper() throws Exception {
         Stream<Tuple<Department, Set<Employee>>> joined = Join
                 .leftOuter(getDepartments())
@@ -118,52 +132,38 @@ public class JoinTest {
     }
 
     @Test
-    public void fullOuterJoinWithCombiner() throws Exception {
+    public void emptyLeftYieldsEmptyStream() throws Exception {
         Stream<Tuple<Department, Employee>> joined = Join
-                .fullOuter(getDepartments())
+                .join(Stream.<Department>empty())
                 .withKey(Department::getId)
                 .on(getEmployees())
                 .withKey(Employee::getDepartmentId)
                 .combine(Tuple::tuple)
                 .asStream();
 
-        assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, rafferty),
-                Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, jones),
-                Tuple.tuple(engineering, heisenberg),
-                Tuple.tuple(clerical, robinson),
-                Tuple.tuple(clerical, smith),
-                Tuple.tuple(marketing, null),
-                Tuple.tuple(storage, null),
-                Tuple.tuple(null, williams),
-                Tuple.tuple(null, scruffy)));
+        assertThat(joined, isEmptyStream());
     }
 
     @Test
-    public void fullOuterJoinWithGrouper() throws Exception {
-        Stream<Tuple<Department, Set<Employee>>> joined = Join
-                .fullOuter(getDepartments())
+    public void emptyRightYieldsEmptyStream() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .join(getDepartments())
                 .withKey(Department::getId)
-                .on(getEmployees())
+                .on(Stream.<Employee>empty())
                 .withKey(Employee::getDepartmentId)
-                .group((d, es) -> tuple(d, es.collect(toSet())))
-                .withRightUnmatched(r -> tuple(Department.sentinel, asSet(r)))
-                .withLeftUnmatched(l -> tuple(l, asSet()))
+                .combine(Tuple::tuple)
                 .asStream();
 
-        assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, asSet(rafferty)),
-                Tuple.tuple(salesTwo, asSet(rafferty)),
-                Tuple.tuple(engineering, asSet(jones,heisenberg)),
-                Tuple.tuple(clerical, asSet(robinson, smith)),
-                Tuple.tuple(marketing, asSet()),
-                Tuple.tuple(storage, asSet()),
-                Tuple.tuple(Department.sentinel, asSet(williams)),
-                Tuple.tuple(Department.sentinel, asSet(scruffy))));
+        assertThat(joined, isEmptyStream());
     }
 
     private static <T> Set<T> asSet(T... items) {
         return new HashSet<>(asList(items));
     }
+
+
+
+
+
+
 }

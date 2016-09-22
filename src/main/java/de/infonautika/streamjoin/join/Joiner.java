@@ -1,79 +1,49 @@
 package de.infonautika.streamjoin.join;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 public class Joiner {
 
-    public static <K, Y, L, R> Stream<Y> join(
-            Stream<L> left,
-            Function<L, K> leftKeyFunction,
-            Stream<R> right,
-            Function<R, K> rightKeyFunction,
+    public static <L, R, KL, KR, Y> Stream<Y> join(
+            Stream<? extends L> left,
+            Function<? super L, KL> leftKeyFunction,
+            Stream<? extends R> right,
+            Function<? super R, KR> rightKeyFunction,
             BiFunction<L, Stream<R>, Stream<Y>> grouper,
-            Function<L, Y> unmatchedLeft,
-            Function<R, Y> unmatchedRight) {
+            Function<? super L, ? extends Y> unmatchedLeft) {
 
-        Clustered<K, R> rightCluster = right.collect(ClusteredCollector.clustered(rightKeyFunction));
+        Cluster<KR, R> rightCluster = createCluster(right, rightKeyFunction);
 
-        Function<L, ResultPart<K, Y>> leftUnmatched = l ->
-                unmatchedLeft == null ? null : new ResultPart<>(null, Stream.of(unmatchedLeft.apply(l)));
+        Function<L, Stream<Y>> mangledUnmatchedLeft = mangledUnmatchedLeft(unmatchedLeft);
 
-        JoinFinished<K, Y> joinFinished = left
+        return left
                 .map(leftElement -> Optional.ofNullable(leftKeyFunction.apply(leftElement))
                         .map(key -> rightCluster.getCluster(key)
-                                .map((StreamToLeftToResult<R, L, K, Y>) cluster -> l -> new ResultPart<>(key, grouper.apply(l, cluster)))
-                                .orElse(leftUnmatched))
-                        .orElse(leftUnmatched)
+                                .map((StreamToLeftToResult<R, L, Y>) cluster -> l -> grouper.apply(l, cluster))
+                                .orElse(mangledUnmatchedLeft))
+                        .orElse(mangledUnmatchedLeft)
                         .apply(leftElement))
                 .filter(result -> result != null)
-                .collect(JoinFinished::new,
-                        JoinFinished::accept,
-                        JoinFinished::combine);
-
-
-        if (unmatchedRight == null) {
-            return joinFinished.result;
-        }
-        return Stream.concat(
-                joinFinished.result,
-                rightCluster.getMisfits(joinFinished.keys)
-                        .map(unmatchedRight));
-
+                .flatMap(Function.identity());
     }
 
-    private interface StreamToLeftToResult<R, L, K, Y> extends Function<Stream<R>, Function<L, ResultPart<K, Y>>> {}
-
-    private static class ResultPart<K, Y> {
-        private final K key;
-        private final Stream<Y> joined;
-        public ResultPart(K key, Stream<Y> joined) {
-            this.key = key;
-            this.joined = joined;
-        }
+    private static <R, KR> Cluster<KR, R> createCluster(Stream<? extends R> right, Function<? super R, KR> rightKeyFunction) {
+        return right.collect(
+                    () -> new Cluster<>(rightKeyFunction),
+                    Cluster::accept,
+                    Cluster::combine);
     }
 
-    private static class JoinFinished<K, Y>  {
-        private final Set<K> keys = new HashSet<>();
-        private Stream<Y> result = Stream.empty();
-        public void accept(ResultPart<K, Y> resultPart) {
-            if (resultPart.key != null) {
-                keys.add(resultPart.key);
-            }
-            concatStream(resultPart.joined);
+    private static <Y, L> Function<L, Stream<Y>> mangledUnmatchedLeft(Function<? super L, ? extends Y> unmatchedLeft) {
+        if (unmatchedLeft == null) {
+            return l -> null;
         }
-
-        private void concatStream(Stream<Y> part) {
-            result = Stream.concat(result, part);
-        }
-
-        public void combine(JoinFinished<K, Y> other) {
-            keys.addAll(other.keys);
-            concatStream(other.result);
-        }
+        return l -> Stream.of(unmatchedLeft.apply(l));
     }
+
+    private interface StreamToLeftToResult<R, L, Y> extends Function<Stream<R>, Function<L, Stream<Y>>> {}
+
 }

@@ -5,11 +5,15 @@ import java.util.Objects;
 public class Department {
     public static final Department sentinel = new DepartmentSentinel();
     private final Integer id;
-    private final String departmentName;
+    private final String name;
+
+    public String getName() {
+        return name;
+    }
 
     public Department(Integer id, String departmentName) {
         this.id = id;
-        this.departmentName = departmentName;
+        this.name = departmentName;
     }
 
     public Integer getId() {
@@ -22,19 +26,19 @@ public class Department {
         if (o == null || getClass() != o.getClass()) return false;
         Department that = (Department) o;
         return Objects.equals(id, that.id) &&
-                Objects.equals(departmentName, that.departmentName);
+                Objects.equals(name, that.name);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, departmentName);
+        return Objects.hash(id, name);
     }
 
     @Override
     public String toString() {
         return "Department{" +
-                "id=" + id +
-                ", departmentName='" + departmentName + '\'' +
+                id +
+                ", " + name  +
                 '}';
     }
 
