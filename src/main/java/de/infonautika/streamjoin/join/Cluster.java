@@ -1,44 +1,41 @@
 package de.infonautika.streamjoin.join;
 
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-class Cluster<K, T> {
-    private final Function<? super T, K> classifier;
-    private final Map<K, List<T>> map;
+class Cluster<I, K, T> {
+    private Function<I, Optional<Stream<T>>> clusterResolver;
 
-    Cluster(Function<? super T, K> classifier) {
-        this(classifier, new HashMap<>());
+    // Dependency on HashMap instead of Map, because the concrete implementation guarantees not to throw
+    // ClassCastException on HashMap.get(key) when the type of key differs from K in contradiction to Map.get(key) spec.
+    public Cluster(HashMap<K, List<T>> map, BiPredicate<I, K> matchPredicate) {
+        this.clusterResolver = createClusterResolver(map, matchPredicate);
     }
 
-    private Cluster(Function<? super T, K> classifier, HashMap<K, List<T>> map) {
-        this.classifier = classifier;
-        this.map = map;
+    Optional<Stream<T>> getCluster(I key) {
+        return clusterResolver.apply(key);
     }
 
-    Optional<Stream<T>> getCluster(Object key) {
-        return Optional.ofNullable(map.get(key))
-                .map(Collection::stream);
-    }
-
-    void accept(T item) {
-        withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
-    }
-
-    void combine(Cluster<K, T> source) {
-        source.map.forEach((key, otherCluster) ->
-                withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
-    }
-
-    private void withClusterOf(K key, Consumer<List<T>> consumer) {
-        if (key != null) {
-            consumer.accept(computeCluster(key));
+    static <I, K, T> Function<I, Optional<Stream<T>>> createClusterResolver(HashMap<K, List<T>> map, BiPredicate<I, K> matchPredicate) {
+        if (matchPredicate == MatchPredicate.EQUALS) {
+            return key -> Optional.ofNullable(map.get(key))
+                    .map(Collection::stream);
         }
+        return key -> emptyIfStreamIsEmpty(map.entrySet().stream()
+                .filter(es -> matchPredicate.test(key, es.getKey()))
+                .map(Map.Entry::getValue)
+                .flatMap(Collection::stream));
     }
 
-    private List<T> computeCluster(K key) {
-        return map.computeIfAbsent(key, (k) -> new ArrayList<>());
+    static <T> Optional<Stream<T>> emptyIfStreamIsEmpty(Stream<T> stream) {
+        Iterator<T> iterator = stream.iterator();
+        if (iterator.hasNext()) {
+            return Optional.of(StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, 0), false));
+        }
+        return Optional.empty();
     }
+
 }

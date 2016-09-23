@@ -1,8 +1,10 @@
 package de.infonautika.streamjoin;
 
 import de.infonautika.streamjoin.join.Joiner;
+import de.infonautika.streamjoin.join.MatchPredicate;
 
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -58,6 +60,8 @@ public class Join {
     public static class IJRightKey<L, R, KL, KR> {
         private final Function<? super R, KR> rightKeyFunction;
         private final IJRightSide<L, R, KL> rightSide;
+        private BiPredicate<KL, KR> matchPredicate = MatchPredicate.equals();
+
         private IJRightKey(Function<? super R, KR> rightKeyFunction, IJRightSide<L, R, KL> rightSide) {
             this.rightKeyFunction = rightKeyFunction;
             this.rightSide = rightSide;
@@ -74,7 +78,12 @@ public class Join {
         }
 
         private <Y> IJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
-            return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, groupMany);
+            return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, matchPredicate, groupMany);
+        }
+
+        public IJRightKey<L, R, KL, KR> matching(BiPredicate<KL, KR> matchPredicate) {
+            this.matchPredicate = matchPredicate;
+            return this;
         }
     }
 
@@ -118,6 +127,8 @@ public class Join {
     public static class LJRightKey<L, R, KL, KR> {
         private final Function<R, KR> rightKeyFunction;
         private final LJRightSide<L, R, KL> rightSide;
+        private BiPredicate<KL, KR> matchPredicate = MatchPredicate.equals();
+
         private LJRightKey(Function<R, KR> rightKeyFunction, LJRightSide<L, R, KL> rightSide) {
             this.rightKeyFunction = rightKeyFunction;
             this.rightSide = rightSide;
@@ -133,8 +144,13 @@ public class Join {
             return createApplyWithCombiner(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
         }
 
+        public LJRightKey<L, R, KL, KR> matching(BiPredicate<KL, KR> matchPredicate) {
+            this.matchPredicate = matchPredicate;
+            return this;
+        }
+
         private <Y> LJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
-            return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, groupMany, unmatchedLeft);
+            return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, matchPredicate, groupMany, unmatchedLeft);
         }
     }
 
@@ -143,18 +159,20 @@ public class Join {
         private final Function<? super L, KL> leftKeyFunction;
         private final Stream<? extends R> right;
         private final Function<? super R, KR> rightKeyFunction;
+        private final BiPredicate<KL, KR> matchPredicate;
         private BiFunction<L, Stream<R>, Stream<Y>> groupMany;
         Function<? super L, ? extends Y> unmatchedLeft;
 
-        private IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
-            this(left, leftKeyFunction, right, rightKeyFunction, groupMany, null);
+        private IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiPredicate<KL, KR> matchPredicate, BiFunction<L, Stream<R>, Stream<Y>>groupMany) {
+            this(left, leftKeyFunction, right, rightKeyFunction, matchPredicate, groupMany, null);
         }
 
-        IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+        IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction,  BiPredicate<KL, KR> matchPredicate, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             this.left = left;
             this.leftKeyFunction = leftKeyFunction;
             this.right = right;
             this.rightKeyFunction = rightKeyFunction;
+            this.matchPredicate = matchPredicate;
             this.groupMany = groupMany;
             this.unmatchedLeft = unmatchedLeft;
         }
@@ -165,6 +183,7 @@ public class Join {
                     leftKeyFunction,
                     right,
                     rightKeyFunction,
+                    matchPredicate,
                     groupMany,
                     unmatchedLeft);
         }
@@ -172,8 +191,8 @@ public class Join {
 
     public static class LJApply<L, R, KL, KR, Y> extends IJApply<L, R, KL, KR, Y> {
 
-        private LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
-            super(left, leftKeyFunction, right, rightKeyFunction, groupMany, unmatchedLeft);
+        private LJApply(Stream<L> left, Function<L, KL> leftKeyFunction, Stream<R> right, Function<R, KR> rightKeyFunction, BiPredicate<KL, KR> matchPredicate, BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+            super(left, leftKeyFunction, right, rightKeyFunction, matchPredicate, groupMany, unmatchedLeft);
         }
 
         public LJApply<L, R, KL, KR, Y> withLeftUnmatched(Function<? super L, ? extends Y> unmatchedLeft) {

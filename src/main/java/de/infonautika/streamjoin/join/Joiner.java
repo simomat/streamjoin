@@ -2,8 +2,11 @@ package de.infonautika.streamjoin.join;
 
 import java.util.Optional;
 import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
+
+import static de.infonautika.streamjoin.join.ClusterCollector.toCluster;
 
 public class Joiner {
 
@@ -12,10 +15,11 @@ public class Joiner {
             Function<? super L, KL> leftKeyFunction,
             Stream<? extends R> right,
             Function<? super R, KR> rightKeyFunction,
+            BiPredicate<KL, KR> matchPredicate,
             BiFunction<L, Stream<R>, Stream<Y>> grouper,
             Function<? super L, ? extends Y> unmatchedLeft) {
 
-        Cluster<KR, R> rightCluster = createCluster(right, rightKeyFunction);
+        Cluster<KL, KR, R> rightCluster = createCluster(right, rightKeyFunction, matchPredicate);
 
         Function<L, Stream<Y>> mangledUnmatchedLeft = mangledUnmatchedLeft(unmatchedLeft);
 
@@ -30,11 +34,8 @@ public class Joiner {
                 .flatMap(Function.identity());
     }
 
-    private static <R, KR> Cluster<KR, R> createCluster(Stream<? extends R> right, Function<? super R, KR> rightKeyFunction) {
-        return right.collect(
-                    () -> new Cluster<>(rightKeyFunction),
-                    Cluster::accept,
-                    Cluster::combine);
+    private static <R, KL, KR> Cluster<KL, KR, R> createCluster(Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiPredicate<KL, KR> matchPredicate) {
+        return right.collect(toCluster(rightKeyFunction, matchPredicate));
     }
 
     private static <Y, L> Function<L, Stream<Y>> mangledUnmatchedLeft(Function<? super L, ? extends Y> unmatchedLeft) {

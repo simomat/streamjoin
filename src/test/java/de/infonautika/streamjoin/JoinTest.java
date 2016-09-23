@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.infonautika.streamjoin.StreamMatcher.isEmptyStream;
@@ -155,6 +156,49 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isEmptyStream());
+    }
+
+    @Test
+    public void innerJoinWithMatchPredicate() throws Exception {
+        Stream<Tuple<Department, Set<Employee>>> joined = Join
+                .join(getDepartments())
+                .withKey(Department::getId)
+                .on(getEmployees())
+                .withKey(Employee::getDepartmentId)
+                .matching((k1, k2) -> k1 > k2)
+                .group((department, employeeStream) -> tuple(department, employeeStream.collect(Collectors.toSet())))
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(engineering, asSet(rafferty)),
+                Tuple.tuple(clerical, asSet(rafferty, jones, heisenberg)),
+                Tuple.tuple(marketing, asSet(rafferty, jones, heisenberg, robinson, smith))));
+    }
+
+    @Test
+    public void leftJoinWithMatchPredicate() throws Exception {
+        Stream<Tuple<Department, Employee>> joined = Join
+                .leftOuter(getDepartments())
+                .withKey(Department::getId)
+                .on(getEmployees())
+                .withKey(Employee::getDepartmentId)
+                .matching((k1, k2) -> k1 > k2)
+                .combine(Tuple::tuple)
+                .asStream();
+
+        assertThat(joined, isStreamOf(
+                Tuple.tuple(engineering, rafferty),
+                Tuple.tuple(clerical, rafferty),
+                Tuple.tuple(clerical, jones),
+                Tuple.tuple(clerical, heisenberg),
+                Tuple.tuple(marketing, rafferty),
+                Tuple.tuple(marketing, jones),
+                Tuple.tuple(marketing, heisenberg),
+                Tuple.tuple(marketing, robinson),
+                Tuple.tuple(marketing, smith),
+                Tuple.tuple(sales, null),
+                Tuple.tuple(salesTwo, null),
+                Tuple.tuple(storage, null)));
     }
 
     private static <T> Set<T> asSet(T... items) {
