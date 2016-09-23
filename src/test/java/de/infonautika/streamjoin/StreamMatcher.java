@@ -11,6 +11,7 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
+@SuppressWarnings("unchecked")
 public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
 
     private List<T> data;
@@ -95,7 +96,6 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     }
 
     public static <T> StreamMatcher<T> isEmptyStream() {
-        //noinspection unchecked
         return isStreamOf();
     }
 }
