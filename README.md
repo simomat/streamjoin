@@ -2,7 +2,7 @@
 
 ... for SQL-like Java 8 Stream joins, inspired by C# Enumerable.Join().
 
-It correlates the elements of two streams and provides transformation of matching objects by passing a BiFunction. The correlation between two objects is established by equality of values defined by functions. 
+It correlates the elements of two streams and provides transformation of matching objects by passing a BiFunction. The correlation between two objects is established by values of key functions.   
 
 Joins are applied using a fluent API:
 ```java
@@ -16,6 +16,20 @@ Stream<BestFriends> bestFriends = Join.
 ```
 
 This combines `Person` objects with `Dog` objects by matching equality of a name property and creates a result object for each match.
+
+#### Matching by other constraints
+
+By default, a match is established by equality of key values. Matching by other constraints is provided:
+```java
+Stream<ShowAttendance> attendances = Join.
+    join(listOfPersons.stream())
+      .withKey(Person::getAge)
+      .on(listOfShows.stream())
+      .withKey(Show::getMinAge)
+      .matching((personAge, minAge) -> personAge >= minAge)
+      .combine((person, show) -> new ShowAttendance(show, person))
+      .asStream();
+```
 
 #### Not matching Objects and key functions returning null
 
@@ -47,13 +61,8 @@ For all join types, multiple matches are respected by calling the combiner for e
 `streamjoin` supports parallel processing by just passing parallel streams (see [Collection.parallelStream()](https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#parallelStream--) and [Stream.parallel()](https://docs.oracle.com/javase/8/docs/api/java/util/stream/BaseStream.html#parallel--)). In order to guarantee correctness, the key functions and combiner/grouper functions should be [non-interfering](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#NonInterference) and [stateless](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#Statelessness).
 
 The left side stream is handled lazy and is not 'consumed', e.g. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
+
 The right side input stream is collected when finishing the join call. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
 
 Hence, if huge streams are joined and memory efficiency matters, using the 'shorter' input stream as right side should be considered.
-
-
-#### Ideas for next steps
-- [ ] add non-equi join (like `WHERE A.RANK < B.RANK`)
-- [x] return a result without 'consume' the left side stream with a terminal operation
-- [x] make generic types less restrictive with bounded wildcards
 
