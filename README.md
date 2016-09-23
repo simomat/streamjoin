@@ -60,9 +60,23 @@ For all join types, multiple matches are respected by calling the combiner for e
 #### Parallel processing and performance
 `streamjoin` supports parallel processing by just passing parallel streams (see [Collection.parallelStream()](https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#parallelStream--) and [Stream.parallel()](https://docs.oracle.com/javase/8/docs/api/java/util/stream/BaseStream.html#parallel--)). In order to guarantee correctness, the key functions and combiner/grouper functions should be [non-interfering](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#NonInterference) and [stateless](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#Statelessness).
 
-The left side stream is handled lazy and is not 'consumed', e.g. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
+The left side stream is handled lazily and is not 'consumed', e.g. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
 
-The right side input stream is collected when finishing the join call. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
+The right side input stream is collected with finalizing tje join with `.asStream()`. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
 
 Hence, if huge streams are joined and memory efficiency matters, using the 'shorter' input stream as right side should be considered.
 
+#### Get it
+`streamjoin` is available via jcenter:
+```xml
+<dependency>
+    <groupId>de.infonautika.streamjoin</groupId>
+    <artifactId>streamjoin</artifactId>
+    <version>1.0.0-beta</version>
+    <type>pom</type>
+</dependency>
+```
+or
+```groovy
+compile 'de.infonautika.streamjoin:streamjoin:1.0.0-beta'
+```
