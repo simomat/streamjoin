@@ -160,7 +160,7 @@ public class Join {
         private final Stream<? extends R> right;
         private final Function<? super R, KR> rightKeyFunction;
         private final BiPredicate<KL, KR> matchPredicate;
-        private BiFunction<L, Stream<R>, Stream<Y>> groupMany;
+        private final BiFunction<L, Stream<R>, Stream<Y>> groupMany;
         Function<? super L, ? extends Y> unmatchedLeft;
 
         private IJApply(Stream<? extends L> left, Function<? super L, KL> leftKeyFunction, Stream<? extends R> right, Function<? super R, KR> rightKeyFunction, BiPredicate<KL, KR> matchPredicate, BiFunction<L, Stream<R>, Stream<Y>>groupMany) {

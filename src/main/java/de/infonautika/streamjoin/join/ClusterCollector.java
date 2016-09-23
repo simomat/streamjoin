@@ -6,7 +6,7 @@ import java.util.stream.Collector;
 
 class ClusterCollector<K, T> {
     private final HashMap<K, List<T>> map = new HashMap<>();
-    private Function<? super T, K> classifier;
+    private final Function<? super T, K> classifier;
 
     private ClusterCollector(Function<? super T, K> classifier) {
         this.classifier = classifier;

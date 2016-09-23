@@ -17,7 +17,7 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     private List<T> actualData;
     private Stream<T> actualStream;
 
-    public StreamMatcher(T... data) {
+    private StreamMatcher(T... data) {
         this.data = asList(data);
     }
 

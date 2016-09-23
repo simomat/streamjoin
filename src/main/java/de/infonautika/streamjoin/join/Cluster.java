@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 class Cluster<I, K, T> {
-    private Function<I, Optional<Stream<T>>> clusterResolver;
+    private final Function<I, Optional<Stream<T>>> clusterResolver;
 
     // Dependency on HashMap instead of Map, because the concrete implementation guarantees not to throw
     // ClassCastException on HashMap.get(key) when the type of key differs from K in contradiction to Map.get(key) spec.
@@ -19,8 +19,9 @@ class Cluster<I, K, T> {
         return clusterResolver.apply(key);
     }
 
-    static <I, K, T> Function<I, Optional<Stream<T>>> createClusterResolver(HashMap<K, List<T>> map, BiPredicate<I, K> matchPredicate) {
+    private static <I, K, T> Function<I, Optional<Stream<T>>> createClusterResolver(HashMap<K, List<T>> map, BiPredicate<I, K> matchPredicate) {
         if (matchPredicate == MatchPredicate.EQUALS) {
+            //noinspection SuspiciousMethodCalls
             return key -> Optional.ofNullable(map.get(key))
                     .map(Collection::stream);
         }
