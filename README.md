@@ -17,20 +17,6 @@ Stream<BestFriends> bestFriends = Join.
 
 This combines `Person` objects with `Dog` objects by matching equality of a name property and creates a result object for each match.
 
-#### Matching by other constraints
-
-By default, a match is established by equality of key values. Matching by other constraints is provided:
-```java
-Stream<ShowAttendance> attendances = Join.
-    join(listOfPersons.stream())
-      .withKey(Person::getAge)
-      .on(listOfShows.stream())
-      .withKey(Show::getMinAge)
-      .matching((personAge, minAge) -> personAge >= minAge)
-      .combine((person, show) -> new ShowAttendance(show, person))
-      .asStream();
-```
-
 #### Not matching Objects and key functions returning null
 
 `Join.join(...)` defines an inner join, meaning that objects which do not correlate at all are not handled by the combiner and thus will not appear in the result.
@@ -56,6 +42,20 @@ For all join types, multiple matches are respected by calling the combiner for e
     .group((left, streamOfMatchingRight) -> something(left, streamOfMatchingRight))
     ...
 ``` 
+
+#### Matching by other constraints
+
+By default, a match is established by equality of key values. Matching by other constraints is provided:
+```java
+Stream<ShowAttendance> attendances = Join.
+    join(listOfPersons.stream())
+      .withKey(Person::getAge)
+      .on(listOfShows.stream())
+      .withKey(Show::getMinAge)
+      .matching((personAge, minAge) -> personAge >= minAge)
+      .combine((person, show) -> new ShowAttendance(show, person))
+      .asStream();
+```
 
 #### Parallel processing and performance
 `streamjoin` supports parallel processing by just passing parallel streams (see [Collection.parallelStream()](https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#parallelStream--) and [Stream.parallel()](https://docs.oracle.com/javase/8/docs/api/java/util/stream/BaseStream.html#parallel--)). In order to guarantee correctness, the key functions and combiner/grouper functions should be [non-interfering](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#NonInterference) and [stateless](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#Statelessness).
