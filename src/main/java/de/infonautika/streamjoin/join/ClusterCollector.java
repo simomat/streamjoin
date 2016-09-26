@@ -4,62 +4,38 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collector;
 
-class ClusterCollector<K, T> {
-    private final HashMap<K, List<T>> map = new HashMap<>();
-    private final Function<? super T, K> classifier;
+class ClusterCollector {
 
-    private ClusterCollector(Function<? super T, K> classifier) {
-        this.classifier = classifier;
-    }
-
-    private ClusterCollector<K, T> combine(ClusterCollector<K, T> other) {
-        other.map.forEach((key, otherCluster) ->
-                withClusterOf(key, cluster -> cluster.addAll(otherCluster)));
-        return this;
-    }
-
-    private void accept(T item) {
-        withClusterOf(classifier.apply(item), cluster -> cluster.add(item));
-    }
-
-    private void withClusterOf(K key, Consumer<List<T>> consumer) {
-        if (key != null) {
-            consumer.accept(computeCluster(key));
-        }
-    }
-
-    private List<T> computeCluster(K key) {
-        return map.computeIfAbsent(key, (k) -> new ArrayList<>());
-    }
-
-    private HashMap<K,List<T>> getMap() {
-        return map;
-    }
-
-    static <I, K, T> Collector<? super T, ClusterCollector<K, T>, Cluster<I, K, T>> toCluster(
+    static <I, K, T> Collector<? super T, HashMap<K, List<T>>, Cluster<I, K, T>> toCluster(
             Function<? super T, K> classifier,
             BiPredicate<I, K> matchPredicate) {
 
-        return new Collector<T, ClusterCollector<K, T>, Cluster<I, K, T>>() {
+        return new Collector<T, HashMap<K, List<T>>, Cluster<I, K, T>>() {
 
             @Override
-            public Supplier<ClusterCollector<K, T>> supplier() {
-                return () -> new ClusterCollector<>(classifier);
+            public Supplier<HashMap<K, List<T>>> supplier() {
+                return HashMap::new;
             }
 
             @Override
-            public BiConsumer<ClusterCollector<K, T>, T> accumulator() {
-                return ClusterCollector::accept;
+            public BiConsumer<HashMap<K, List<T>>, T> accumulator() {
+                return (map, item) -> Optional.ofNullable(classifier.apply(item))
+                        .map(key -> map.computeIfAbsent(key, k -> new ArrayList<>()))
+                        .ifPresent(cluster -> cluster.add(item));
             }
 
             @Override
-            public BinaryOperator<ClusterCollector<K, T>> combiner() {
-                return ClusterCollector::combine;
+            public BinaryOperator<HashMap<K, List<T>>> combiner() {
+                return (map, other) -> {
+                    other.forEach((key, otherCluster) ->
+                        map.merge(key, otherCluster, (left, right) -> { left.addAll(right); return left; }));
+                    return map;
+                };
             }
 
             @Override
-            public Function<ClusterCollector<K, T>, Cluster<I, K, T>> finisher() {
-                return collector -> new Cluster<>(collector.getMap(), matchPredicate);
+            public Function<HashMap<K, List<T>>, Cluster<I, K, T>> finisher() {
+                return map -> new Cluster<>(map, matchPredicate);
             }
 
             @Override
@@ -67,6 +43,5 @@ class ClusterCollector<K, T> {
                 return EnumSet.of(Characteristics.UNORDERED);
             }
         };
-
     }
 }
