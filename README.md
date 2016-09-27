@@ -17,6 +17,32 @@ Stream<BestFriends> bestFriends = Join.
 
 This combines `Person` objects with `Dog` objects by matching equality of a name property and creates a result object for each match.
 
+#### Not matching Objects and key functions returning null
+
+`Join.join(...)` defines an inner join, meaning that objects which do not correlate at all are not handled by the combiner and thus will not appear in the result.
+
+Key functions which return `null` for one or many objects are tollerated, but will treat the object as not matchable.
+
+#### Join Types
+
+- [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) as shown with `Join.join(...)`
+- [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftOuter(...)`.
+Unmatching objects of the left side (i.e. the first stream given) are respected. By default, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with 
+```java
+    .combine((left, right) -> something(left, right))
+    .withLeftUnmatched(left -> someOther(left))
+    ...
+```
+
+
+#### One to Many, Many to One, Many to Many
+For all join types, multiple matches are respected by calling the combiner for each match. Instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right objects as parameter:
+```java
+    ...
+    .group((left, streamOfMatchingRight) -> something(left, streamOfMatchingRight))
+    ...
+``` 
+
 #### Matching by other constraints
 
 By default, a match is established by equality of key values. Matching by other constraints is provided:
@@ -31,38 +57,12 @@ Stream<ShowAttendance> attendances = Join.
       .asStream();
 ```
 
-#### Not matching Objects and key functions returning null
-
-`Join.join(...)` defines an inner join, meaning that objects which do not correlate at all are not handled by the combiner and thus will not appear in the result.
-
-Key functions which return `null` for one or many objects are tollerated, but will treat the object as not matchable.
-
-#### Join Types
-
-- [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) as shown with `Join.join(...)`
-- [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftJoin(...)`.
-Unmatching objects of the left side (i.e. the first stream given) are respected. By default, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with 
-```java
-    .combine((left, right) -> something(left, right))
-    .withLeftUnmatched(left -> someOther(left))
-    ...
-```
-
-
-#### One to Many, Many to One, Many to Many
-For all join types, multiple matches are respected by calling the combiner for each match. Instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right object as parameter:
-```java
-    ...
-    .group((left, streamOfMatchingRight) -> something(left, streamOfMatchingRight))
-    ...
-``` 
-
 #### Parallel processing and performance
 `streamjoin` supports parallel processing by just passing parallel streams (see [Collection.parallelStream()](https://docs.oracle.com/javase/8/docs/api/java/util/Collection.html#parallelStream--) and [Stream.parallel()](https://docs.oracle.com/javase/8/docs/api/java/util/stream/BaseStream.html#parallel--)). In order to guarantee correctness, the key functions and combiner/grouper functions should be [non-interfering](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#NonInterference) and [stateless](http://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#Statelessness).
 
-The left side stream is handled lazily and is not 'consumed', e.g. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
+The left side stream is handled lazily and is not 'consumed', i.e. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
 
-The right side input stream is collected with finalizing tje join with `.asStream()`. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
+The right side input stream is collected with finalizing the join with `.asStream()`. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
 
 Hence, if huge streams are joined and memory efficiency matters, using the 'shorter' input stream as right side should be considered.
 
