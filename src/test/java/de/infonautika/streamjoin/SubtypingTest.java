@@ -48,7 +48,7 @@ public class SubtypingTest {
 
 
     @Test
-    public void keyTightAcceptsSubtypeOfRight() throws Exception {
+    public void keyRightAcceptsSubtypeOfRight() throws Exception {
         Stream<Integer> stream = Join.join(a1s.stream()).withKey(keyA1).on(a2s.stream()).withKey(keyA1).combine(sumOfA).asStream();
 
         assertThat(stream, isStreamOf(2, 4));
