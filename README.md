@@ -26,7 +26,7 @@ Key functions which return `null` for one or many objects are tollerated, but wi
 #### Join Types
 
 - [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) as shown with `Join.join(...)`
-- [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftJoin(...)`.
+- [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftOuter(...)`.
 Unmatching objects of the left side (i.e. the first stream given) are respected. By default, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with 
 ```java
     .combine((left, right) -> something(left, right))
@@ -36,7 +36,7 @@ Unmatching objects of the left side (i.e. the first stream given) are respected.
 
 
 #### One to Many, Many to One, Many to Many
-For all join types, multiple matches are respected by calling the combiner for each match. Instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right object as parameter:
+For all join types, multiple matches are respected by calling the combiner for each match. Instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right objects as parameter:
 ```java
     ...
     .group((left, streamOfMatchingRight) -> something(left, streamOfMatchingRight))
