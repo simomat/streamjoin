@@ -69,15 +69,15 @@ public class Join {
 
         public <Y> IJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
             checkNotNull(combiner, "combiner must not be null");
-            return createApplyWithCombiner(combinerToGroupMany(combiner));
+            return createApply(combinerToGroupMany(combiner));
         }
 
         public <Y> IJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
             checkNotNull(grouper, "grouper must not be null");
-            return createApplyWithCombiner(grouperToGroupMany(grouper));
+            return createApply(grouperToGroupMany(grouper));
         }
 
-        private <Y> IJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
+        private <Y> IJApply<L, R, KL, KR, Y> createApply(BiFunction<L, Stream<R>, Stream<Y>> groupMany) {
             return new IJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, matchPredicate, groupMany);
         }
 
@@ -136,12 +136,12 @@ public class Join {
 
         public <Y> LJApply<L, R, KL, KR, Y> combine(BiFunction<? super L, ? super R, Y> combiner) {
             checkNotNull(combiner, "combiner must not be null");
-            return createApplyWithCombiner(combinerToGroupMany(combiner), toUnmatchedLeft(combiner));
+            return createApply(combinerToGroupMany(combiner), toUnmatchedLeft(combiner));
         }
 
         public <Y> LJApply<L, R, KL, KR, Y> group(BiFunction<? super L, Stream<R>, Y> grouper) {
             checkNotNull(grouper, "grouper must not be null");
-            return createApplyWithCombiner(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
+            return createApply(grouperToGroupMany(grouper), toUnmatchedLeft(grouper));
         }
 
         public LJRightKey<L, R, KL, KR> matching(BiPredicate<KL, KR> matchPredicate) {
@@ -149,7 +149,7 @@ public class Join {
             return this;
         }
 
-        private <Y> LJApply<L, R, KL, KR, Y> createApplyWithCombiner(BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
+        private <Y> LJApply<L, R, KL, KR, Y> createApply(BiFunction<L, Stream<R>, Stream<Y>> groupMany, Function<L, Y> unmatchedLeft) {
             return new LJApply<>(rightSide.leftKey.leftSide.left, rightSide.leftKey.leftKeyFunction, rightSide.right, rightKeyFunction, matchPredicate, groupMany, unmatchedLeft);
         }
     }
