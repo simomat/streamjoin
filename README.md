@@ -62,7 +62,7 @@ Stream<ShowAttendance> attendances = Join.
 
 The left side stream is handled lazily and is not 'consumed', i.e. no [terminal operation](https://docs.oracle.com/javase/8/docs/api/java/util/stream/package-summary.html#StreamOps) is performed on it.
 
-The right side input stream is collected with finalizing the join with `.asStream()`. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
+The right side input stream is collected on finalizing the join with `.asStream()`. References on resulting data of that stream are held in memory until the resulting joined stream is 'consumed'.
 
 Hence, if huge streams are joined and memory efficiency matters, using the 'shorter' input stream as right side should be considered.
 
