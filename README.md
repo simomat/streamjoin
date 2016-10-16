@@ -21,7 +21,7 @@ This combines `Person` objects with `Dog` objects by matching equality of a name
 
 `Join.join(...)` defines an inner join, meaning that objects which do not correlate at all are not handled by the combiner and thus will not appear in the result.
 
-Key functions which return `null` for one or many objects are tollerated, but will treat the object as not matchable.
+Key functions which return `null` for one or many objects are tolerated, but will treat the object as not matchable.
 
 #### Join Types
 
