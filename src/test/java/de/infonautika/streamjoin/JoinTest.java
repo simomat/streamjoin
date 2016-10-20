@@ -31,12 +31,12 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, rafferty),
-                Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, jones),
-                Tuple.tuple(engineering, heisenberg),
-                Tuple.tuple(clerical, robinson),
-                Tuple.tuple(clerical, smith)));
+                tuple(sales, rafferty),
+                tuple(salesTwo, rafferty),
+                tuple(engineering, jones),
+                tuple(engineering, heisenberg),
+                tuple(clerical, robinson),
+                tuple(clerical, smith)));
     }
 
     @Test
@@ -50,9 +50,9 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, rafferty),
-                Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, heisenberg)));
+                tuple(sales, rafferty),
+                tuple(salesTwo, rafferty),
+                tuple(engineering, heisenberg)));
     }
 
     @Test
@@ -66,10 +66,10 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, asSet(rafferty)),
-                Tuple.tuple(salesTwo, asSet(rafferty)),
-                Tuple.tuple(engineering, asSet(jones,heisenberg)),
-                Tuple.tuple(clerical, asSet(robinson, smith))));
+                tuple(sales, asSet(rafferty)),
+                tuple(salesTwo, asSet(rafferty)),
+                tuple(engineering, asSet(jones,heisenberg)),
+                tuple(clerical, asSet(robinson, smith))));
     }
 
     @Test
@@ -83,14 +83,14 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, rafferty),
-                Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, jones),
-                Tuple.tuple(engineering, heisenberg),
-                Tuple.tuple(clerical, robinson),
-                Tuple.tuple(clerical, smith),
-                Tuple.tuple(marketing, null),
-                Tuple.tuple(storage, null)));
+                tuple(sales, rafferty),
+                tuple(salesTwo, rafferty),
+                tuple(engineering, jones),
+                tuple(engineering, heisenberg),
+                tuple(clerical, robinson),
+                tuple(clerical, smith),
+                tuple(marketing, null),
+                tuple(storage, null)));
     }
 
     @Test
@@ -104,12 +104,12 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, rafferty),
-                Tuple.tuple(salesTwo, rafferty),
-                Tuple.tuple(engineering, heisenberg),
-                Tuple.tuple(clerical, null),
-                Tuple.tuple(marketing, null),
-                Tuple.tuple(storage, null)));
+                tuple(sales, rafferty),
+                tuple(salesTwo, rafferty),
+                tuple(engineering, heisenberg),
+                tuple(clerical, null),
+                tuple(marketing, null),
+                tuple(storage, null)));
     }
 
     @Test
@@ -124,12 +124,12 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(sales, asSet(rafferty)),
-                Tuple.tuple(salesTwo, asSet(rafferty)),
-                Tuple.tuple(engineering, asSet(jones,heisenberg)),
-                Tuple.tuple(clerical, asSet(robinson, smith)),
-                Tuple.tuple(marketing, asSet()),
-                Tuple.tuple(storage, asSet())));
+                tuple(sales, asSet(rafferty)),
+                tuple(salesTwo, asSet(rafferty)),
+                tuple(engineering, asSet(jones,heisenberg)),
+                tuple(clerical, asSet(robinson, smith)),
+                tuple(marketing, asSet()),
+                tuple(storage, asSet())));
     }
 
     @Test
@@ -170,9 +170,9 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(engineering, asSet(rafferty)),
-                Tuple.tuple(clerical, asSet(rafferty, jones, heisenberg)),
-                Tuple.tuple(marketing, asSet(rafferty, jones, heisenberg, robinson, smith))));
+                tuple(engineering, asSet(rafferty)),
+                tuple(clerical, asSet(rafferty, jones, heisenberg)),
+                tuple(marketing, asSet(rafferty, jones, heisenberg, robinson, smith))));
     }
 
     @Test
@@ -187,18 +187,18 @@ public class JoinTest {
                 .asStream();
 
         assertThat(joined, isStreamOf(
-                Tuple.tuple(engineering, rafferty),
-                Tuple.tuple(clerical, rafferty),
-                Tuple.tuple(clerical, jones),
-                Tuple.tuple(clerical, heisenberg),
-                Tuple.tuple(marketing, rafferty),
-                Tuple.tuple(marketing, jones),
-                Tuple.tuple(marketing, heisenberg),
-                Tuple.tuple(marketing, robinson),
-                Tuple.tuple(marketing, smith),
-                Tuple.tuple(sales, null),
-                Tuple.tuple(salesTwo, null),
-                Tuple.tuple(storage, null)));
+                tuple(engineering, rafferty),
+                tuple(clerical, rafferty),
+                tuple(clerical, jones),
+                tuple(clerical, heisenberg),
+                tuple(marketing, rafferty),
+                tuple(marketing, jones),
+                tuple(marketing, heisenberg),
+                tuple(marketing, robinson),
+                tuple(marketing, smith),
+                tuple(sales, null),
+                tuple(salesTwo, null),
+                tuple(storage, null)));
     }
 
     private static <T> Set<T> asSet(T... items) {
