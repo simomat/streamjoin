@@ -11,7 +11,7 @@ plugins {
 }
 
 group 'de.infonautika.streamjoin'
-version '1.0.0-beta'
+version '1.0.0'
 
 
 
@@ -34,11 +34,11 @@ dependencies {
 
 publishing {
     publications {
-        MyPublication(MavenPublication) {
+        StreamjoinPublication(MavenPublication) {
             from components.java
             groupId 'de.infonautika.streamjoin'
             artifactId 'streamjoin'
-            version '1.0.0-beta'
+            version '1.0.0'
         }
     }
 }
@@ -46,18 +46,28 @@ publishing {
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
-    publications = ['MyPublication']
+    publications = ['StreamjoinPublication']
+
+    dryRun = true
+    publish = false
+    override = false
+
     pkg {
         repo = 'maven'
         name = 'streamjoin'
         licenses = ['Apache-2.0']
+        websiteUrl = 'https://github.com/simomat/streamjoin'
+        issueTrackerUrl = 'https://github.com/simomat/streamjoin/issues'
         vcsUrl = 'https://github.com/simomat/streamjoin.git'
+        labels = ['java', 'stream']
+        githubRepo = 'simomat/streamjoin'
+        githubReleaseNotesFile = 'README.md'
+
         version {
-            name = '1.0.0-beta'
+            name = '1.0.0'
             desc = ' Java 8 Stream joins'
             released  = new Date()
-            vcsTag = '1.0.0-beta'
-//            attributes = ['streamjoin': 'de.infonautika.streamjoin:com.use.less.gradle:gradle-useless-plugin']
+            vcsTag = '1.0.0'
         }
     }
 }
