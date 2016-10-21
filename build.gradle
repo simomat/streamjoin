@@ -32,13 +32,23 @@ dependencies {
     testCompile('org.mockito:mockito-core:2.1.0-RC.1')
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
 publishing {
     publications {
         StreamjoinPublication(MavenPublication) {
             from components.java
             groupId 'de.infonautika.streamjoin'
             artifactId 'streamjoin'
-            version '1.0.0'
+            artifact sourcesJar
+            version "${project.version}"
         }
     }
 }
@@ -50,7 +60,6 @@ bintray {
 
     dryRun = true
     publish = false
-    override = false
 
     pkg {
         repo = 'maven'
@@ -64,7 +73,7 @@ bintray {
         githubReleaseNotesFile = 'README.md'
 
         version {
-            name = '1.0.0'
+            name = "${project.version}"
             desc = ' Java 8 Stream joins'
             released  = new Date()
             vcsTag = '1.0.0'
