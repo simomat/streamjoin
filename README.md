@@ -2,6 +2,8 @@
 
 ... for SQL-like Java 8 Stream joins, inspired by C# Enumerable.Join().
 
+ [ ![Download](https://api.bintray.com/packages/simomat/maven/streamjoin/images/download.svg) ](https://bintray.com/simomat/maven/streamjoin/_latestVersion) 
+
 It correlates the elements of two streams and provides transformation of matching objects by passing a BiFunction. The correlation between two objects is established by values of key functions.   
 
 Joins are applied using a fluent API:
