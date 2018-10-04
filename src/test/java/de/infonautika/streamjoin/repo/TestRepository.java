@@ -43,7 +43,15 @@ public class TestRepository {
         return employees.stream();
     }
 
+    public static Stream<Employee> employeesWithDepartment() {
+        return getEmployees().filter(e -> e.getDepartmentId() != null);
+    }
+
     public static Stream<Department> getDepartments() {
         return departments.stream();
+    }
+
+    public static Stream<Department> departmentsWithId() {
+        return getDepartments().filter(d -> d.getId() != null);
     }
 }

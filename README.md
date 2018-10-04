@@ -29,7 +29,9 @@ Key functions which return `null` for one or many objects are tolerated, but wil
 
 - [inner join](https://en.wikipedia.org/wiki/Join_(SQL)#Inner_join) as shown with `Join.join(...)`
 - [left outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Left_outer_join) with `Join.leftOuter(...)`.
-Unmatching objects of the left side (i.e. the first stream given) are respected. By default, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with 
+- [full outer joins](https://en.wikipedia.org/wiki/Join_(SQL)#Full_outer_join) with `FullJoin.fullJoin(...)`.
+
+With a left join, all entries from the first stream are always included. By default, when an item in the first stream is not matched in the second, `null` will be passed to the combining function. An additional handler for unmatching left side objects can be defined with: 
 ```java
     .combine((left, right) -> something(left, right))
     .withLeftUnmatched(left -> someOther(left))
@@ -37,8 +39,30 @@ Unmatching objects of the left side (i.e. the first stream given) are respected.
 ```
 
 
+With a full join, all entries from both streams are included. Matching entries are paired up with the combiner.
+
+```java
+
+Stream<BestFriends> bestFriends = FullJoin.
+    fullJoin(listOfPersons.stream())
+      .withKey(Person::getName)
+      .on(listOfDogs.stream())
+      .withKey(Dog::getOwnerName)
+      .combine((person, dog) -> new BestFriends(person, dog))
+      .asStream();
+
+```
+
+Non-matching entries on the left and right are represented as null, or may be mapped using:
+
+```java
+    .withLeftUnmatched(left -> someOtherLeft(left))
+    .withRightUnmatched(right -> someOtherRight(right))
+
+```
+
 #### One to Many, Many to One, Many to Many
-For all join types, multiple matches are respected by calling the combiner for each match. Instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right objects as parameter:
+For all join types, multiple matches are respected by calling the combiner for each match. For inner and left joins, instead of `.combine(combiner)`, a grouped matcher may be defined, that takes a left object and a stream of matching right objects as parameter:
 ```java
     ...
     .group((left, streamOfMatchingRight) -> something(left, streamOfMatchingRight))
@@ -74,11 +98,11 @@ Hence, if huge streams are joined and memory efficiency matters, using the 'shor
 <dependency>
     <groupId>de.infonautika.streamjoin</groupId>
     <artifactId>streamjoin</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.0</version>
     <type>pom</type>
 </dependency>
 ```
 or
 ```groovy
-compile 'de.infonautika.streamjoin:streamjoin:1.0.0'
+compile 'de.infonautika.streamjoin:streamjoin:1.1.0'
 ```

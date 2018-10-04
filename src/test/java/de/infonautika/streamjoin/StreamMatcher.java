@@ -1,5 +1,6 @@
 package de.infonautika.streamjoin;
 
+import de.infonautika.streamjoin.repo.Tuple;
 import org.hamcrest.Description;
 import org.hamcrest.TypeSafeMatcher;
 
@@ -11,15 +12,19 @@ import java.util.stream.Stream;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
-@SuppressWarnings("unchecked")
 public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
 
     private List<T> data;
     private List<T> actualData;
     private Stream<T> actualStream;
 
+    @SafeVarargs
     private StreamMatcher(T... data) {
         this.data = asList(data);
+    }
+
+    private StreamMatcher(List<T> data) {
+        this.data = data;
     }
 
     @Override
@@ -91,11 +96,21 @@ public class StreamMatcher<T> extends TypeSafeMatcher<Stream<T>> {
     }
 
 
+    @SafeVarargs
     public static <T> StreamMatcher<T> isStreamOf(T... data) {
         return new StreamMatcher<>(data);
     }
 
-    public static <T> StreamMatcher<T> isEmptyStream() {
+    @SafeVarargs
+    static <A, B> StreamMatcher<Tuple<A, B>> isStreamOfTuples(Tuple<A, B>... data) {
+        return new StreamMatcher<>(data);
+    }
+
+    static <A, B> StreamMatcher<Tuple<A, B>> isStreamOfTuples(Stream<Tuple<A, B>> data) {
+        return new StreamMatcher<>(data.collect(toList()));
+    }
+
+    static <T> StreamMatcher<T> isEmptyStream() {
         return isStreamOf();
     }
 }

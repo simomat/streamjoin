@@ -21,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @SuppressWarnings("unchecked")
 public class JoinTest {
     @Test
-    public void innerJoinWithCombiner() throws Exception {
+    public void innerJoinWithCombiner() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .join(getDepartments())
                 .withKey(Department::getId)
@@ -40,7 +40,7 @@ public class JoinTest {
     }
 
     @Test
-    public void innerJoinWithNullKey() throws Exception {
+    public void innerJoinWithNullKey() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .join(getDepartments())
                 .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
@@ -56,7 +56,7 @@ public class JoinTest {
     }
 
     @Test
-    public void innerJoinWithGrouper() throws Exception {
+    public void innerJoinWithGrouper() {
         Stream<Tuple<Department, Set<Employee>>> joined = Join
                 .join(getDepartments())
                 .withKey(Department::getId)
@@ -73,7 +73,7 @@ public class JoinTest {
     }
 
     @Test
-    public void leftOuterJoinWithCombiner() throws Exception {
+    public void leftOuterJoinWithCombiner() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .leftOuter(getDepartments())
                 .withKey(Department::getId)
@@ -94,7 +94,7 @@ public class JoinTest {
     }
 
     @Test
-    public void leftOuterJoinWithNullKey() throws Exception {
+    public void leftOuterJoinWithNullKey() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .leftOuter(getDepartments())
                 .withKey(d -> d.getName().equals("Clerical") ? null : d.getId())
@@ -113,7 +113,7 @@ public class JoinTest {
     }
 
     @Test
-    public void leftOuterJoinWithGrouper() throws Exception {
+    public void leftOuterJoinWithGrouper() {
         Stream<Tuple<Department, Set<Employee>>> joined = Join
                 .leftOuter(getDepartments())
                 .withKey(Department::getId)
@@ -133,7 +133,7 @@ public class JoinTest {
     }
 
     @Test
-    public void emptyLeftYieldsEmptyStream() throws Exception {
+    public void emptyLeftYieldsEmptyStream() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .join(Stream.<Department>empty())
                 .withKey(Department::getId)
@@ -146,7 +146,7 @@ public class JoinTest {
     }
 
     @Test
-    public void emptyRightYieldsEmptyStream() throws Exception {
+    public void emptyRightYieldsEmptyStream() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .join(getDepartments())
                 .withKey(Department::getId)
@@ -159,7 +159,7 @@ public class JoinTest {
     }
 
     @Test
-    public void innerJoinWithMatchPredicate() throws Exception {
+    public void innerJoinWithMatchPredicate() {
         Stream<Tuple<Department, Set<Employee>>> joined = Join
                 .join(getDepartments())
                 .withKey(Department::getId)
@@ -176,7 +176,7 @@ public class JoinTest {
     }
 
     @Test
-    public void leftJoinWithMatchPredicate() throws Exception {
+    public void leftJoinWithMatchPredicate() {
         Stream<Tuple<Department, Employee>> joined = Join
                 .leftOuter(getDepartments())
                 .withKey(Department::getId)
@@ -201,13 +201,8 @@ public class JoinTest {
                 tuple(storage, null)));
     }
 
+    @SafeVarargs
     private static <T> Set<T> asSet(T... items) {
         return new HashSet<>(asList(items));
     }
-
-
-
-
-
-
 }

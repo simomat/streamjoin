@@ -8,6 +8,9 @@ import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static de.infonautika.streamjoin.Combiners.toUnmatchedLeft;
+import static de.infonautika.streamjoin.Guards.checkNotNull;
+
 public class Join {
 
     public static <L> IJLeftSide<L> join(Stream<? extends L> left) {
@@ -208,15 +211,5 @@ public class Join {
 
     private static <L, R, Y> BiFunction<L, Stream<R>, Stream<Y>> grouperToGroupMany(BiFunction<? super L, Stream<R>, Y> grouper) {
         return (left, rightStream) -> Stream.of(grouper.apply(left, rightStream));
-    }
-
-    private static <L, Y> Function<L, Y> toUnmatchedLeft(BiFunction<? super L, ?, Y> resultHandler) {
-        return l -> resultHandler.apply(l, null);
-    }
-
-    private static void checkNotNull(Object object, String message) {
-        if (object == null) {
-            throw new IllegalArgumentException(message);
-        }
     }
 }
