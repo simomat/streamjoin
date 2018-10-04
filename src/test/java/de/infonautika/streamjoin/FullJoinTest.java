@@ -5,6 +5,7 @@ import de.infonautika.streamjoin.repo.Employee;
 import de.infonautika.streamjoin.repo.Tuple;
 import org.junit.Test;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static de.infonautika.streamjoin.FullJoin.fullJoin;
@@ -12,6 +13,7 @@ import static de.infonautika.streamjoin.StreamMatcher.isEmptyStream;
 import static de.infonautika.streamjoin.StreamMatcher.isStreamOfTuples;
 import static de.infonautika.streamjoin.repo.TestRepository.*;
 import static de.infonautika.streamjoin.repo.Tuple.tuple;
+import static java.util.Arrays.asList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -100,6 +102,34 @@ public class FullJoinTest {
             tuple(clerical, null),
             // Also not matched to anything
             tuple(null, williams)));
+    }
+
+    @Test
+    public void doesNotMatchNullKeyOnLeftWithNullKeyOnRight() {
+        List<Tuple<String, String>> left = asList(
+            tuple("Foo", "Bar"),
+            tuple(null, "Qux")
+        );
+
+        List<Tuple<String, String>> right = asList(
+            tuple("Foo", "Baz"),
+            tuple(null, "Fiz")
+        );
+
+        Stream<Tuple<Tuple<String, String>, Tuple<String, String>>> joined =
+            fullJoin(left.stream())
+            .withKey(Tuple::getFirst)
+            .on(right.stream())
+            .withKey(Tuple::getFirst)
+            .combine(Tuple::tuple)
+            .asStream()
+        ;
+
+        assertThat(joined, isStreamOfTuples(
+            tuple(tuple("Foo", "Bar"), tuple("Foo", "Baz")),
+            tuple(tuple(null, "Qux"), null),
+            tuple(null, tuple(null, "Fiz"))
+        ));
     }
 
     @Test

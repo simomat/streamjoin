@@ -12,6 +12,10 @@ public class Tuple<A, B> {
         this.second = second;
     }
 
+    public A getFirst() {
+        return first;
+    }
+
     public static <A, B> Tuple<A, B> tuple(A first, B second){
         return new Tuple<>(first, second);
     }
